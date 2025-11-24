@@ -1,0 +1,284 @@
+import React, { useEffect, useState } from 'react';
+import Sidebar from '../components/Sidebar';
+import api from '../api/axios';
+import { Bar, Pie } from 'react-chartjs-2';
+import 'chart.js/auto';
+
+export default function Dashboard(){
+  const [summary, setSummary] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(()=>{
+    api.get('/user').then(r=>setUser(r.data)).catch(()=>{});
+    api.get('/summary').then(r=>setSummary(r.data)).catch(()=>{});
+  },[]);
+
+  const barData = {
+    labels: summary?.byCategory?.map(c=>c.category) ?? ['Organik','Anorganik'],
+    datasets: [{ 
+      label: 'Berat (Kg)', 
+      data: summary?.byCategory?.map(c=>c.total_weight) ?? [142,86], 
+      backgroundColor: ['#10B981','#3B82F6'],
+      borderRadius: 8
+    }]
+  };
+
+  const pieData = {
+    labels: summary?.byCategory?.map(c=>c.category) ?? ['Organik','Anorganik'],
+    datasets: [{ 
+      data: summary?.byCategory?.map(c=>c.total_weight) ?? [62, 38],
+      backgroundColor: ['#10B981','#3B82F6'],
+      borderWidth: 0
+    }]
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      y: { 
+        beginAtZero: true,
+        grid: { display: false }
+      },
+      x: {
+        grid: { display: false }
+      }
+    }
+  };
+
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { 
+        position: 'right',
+        labels: {
+          usePointStyle: true,
+          padding: 15
+        }
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Sidebar />
+      
+      <main className="flex-1 p-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+            <p className="text-sm text-gray-500">Kelola sampah Anda dengan mudah</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="relative p-2 hover:bg-gray-100 rounded-lg">
+              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
+                {user?.name?.charAt(0) || 'A'}
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-gray-800">{user?.name || 'Ahmad Rizki'}</div>
+                <div className="text-xs text-gray-500">Nasabah</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-simgreen-600 to-simgreen-500 rounded-2xl p-6 mb-6 text-white shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl">👋</span>
+            <h2 className="text-xl font-bold">Selamat Datang, {user?.name || 'Ahmad Rizki'}!</h2>
+          </div>
+          <p className="text-white/90">Mari kelola sampah dan dapatkan keuntungan bersama SIMBASFA</p>
+        </div>
+
+        {/* Saldo Card */}
+        <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Saldo Saat Ini</p>
+              <h3 className="text-4xl font-bold text-gray-800">
+                Rp {Number(summary?.totalAmount || 1250000).toLocaleString('id-ID')}
+              </h3>
+              <p className="text-sm text-simgreen-600 mt-2">+Rp 75.000 Bulan Ini</p>
+            </div>
+            <div className="w-16 h-16 bg-simgreen-100 rounded-2xl flex items-center justify-center">
+              <svg className="w-8 h-8 text-simgreen-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Menu Utama */}
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Menu Utama</h3>
+          <div className="grid grid-cols-4 gap-4">
+            {/* Setor Sampah */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-1">Setor Sampah</h4>
+              <p className="text-xs text-gray-500">Setor sampah dan dapatkan saldo</p>
+            </div>
+
+            {/* Tarik Saldo */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-1">Tarik Saldo</h4>
+              <p className="text-xs text-gray-500">Cairkan saldo ke rekening</p>
+            </div>
+
+            {/* Riwayat Transaksi */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-1">Riwayat Transaksi</h4>
+              <p className="text-xs text-gray-500">Lihat semua transaksi</p>
+            </div>
+
+            {/* Profil Pengguna */}
+            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-3">
+                <svg className="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h4 className="font-semibold text-gray-800 mb-1">Profil Pengguna</h4>
+              <p className="text-xs text-gray-500">Kelola profil akun</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          {/* Bar Chart */}
+          <div className="bg-white rounded-2xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Setoran Per Jenis Sampah</h3>
+            <div style={{ height: '280px' }}>
+              <Bar data={barData} options={barOptions} />
+            </div>
+          </div>
+
+          {/* Pie Chart */}
+          <div className="bg-white rounded-2xl shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Perbandingan Jenis Sampah</h3>
+            <div style={{ height: '280px' }}>
+              <Pie data={pieData} options={pieOptions} />
+            </div>
+          </div>
+        </div>
+
+        {/* Aktivitas Terbaru */}
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-800">Aktivitas Terbaru</h3>
+            <a href="#" className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
+              Lihat Semua
+            </a>
+          </div>
+          
+          <div className="space-y-3">
+            {/* Transaction 1 */}
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-800">Setor Sampah Organik</div>
+                  <div className="text-xs text-gray-500">15 Desember 2024, 10:21</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-green-600">+Rp 45.000</div>
+                <div className="text-xs text-gray-500">15 kg</div>
+              </div>
+            </div>
+
+            {/* Transaction 2 */}
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-8a3 3 0 11-6 0 3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-800">Penarikan Saldo</div>
+                  <div className="text-xs text-gray-500">12 Desember 2024, 14:20</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-red-600">-Rp 200.000</div>
+                <div className="text-xs text-gray-500">Transfer Bank</div>
+              </div>
+            </div>
+
+            {/* Transaction 3 */}
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-800">Setor Sampah Anorganik</div>
+                  <div className="text-xs text-gray-500">10 Desember 2024, 09:15</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-green-600">+Rp 85.000</div>
+                <div className="text-xs text-gray-500">20 kg</div>
+              </div>
+            </div>
+
+            {/* Transaction 4 */}
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-800">Setor Sampah Organik</div>
+                  <div className="text-xs text-gray-500">08 Desember 2024, 11:47</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-bold text-green-600">+Rp 52.000</div>
+                <div className="text-xs text-gray-500">12 kg</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

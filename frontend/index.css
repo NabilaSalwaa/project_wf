@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --simgreen: #16A34A;
+  --simgreen-dark: #0F8C3A;
+  --bg: #F5FBF8;
+  --muted: #6B7280;
+}
+
+.heading-hero { @apply text-5xl font-extrabold leading-tight text-gray-900; }
+.card { @apply bg-white rounded-2xl shadow-card p-6; }
+.btn-primary { @apply inline-flex items-center justify-center bg-simgreen-500 hover:bg-simgreen-600 text-white font-semibold px-6 py-3 rounded-lg; }
+.input { @apply w-full p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-simgreen-200; }
