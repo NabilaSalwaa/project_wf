@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import api from '../api/axios';
 import { Bar, Pie } from 'react-chartjs-2';
@@ -7,6 +8,15 @@ import 'chart.js/auto';
 export default function Dashboard(){
   const [summary, setSummary] = useState(null);
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const notifications = [
+    { id: 1, type: 'success', title: 'Setoran Berhasil', message: 'Setoran sampah 2.5 kg telah diterima', time: '5 menit lalu', unread: true },
+    { id: 2, type: 'info', title: 'Poin Ditambahkan', message: 'Anda mendapat 125 poin dari setoran terakhir', time: '1 jam lalu', unread: true },
+    { id: 3, type: 'warning', title: 'Penarikan Diproses', message: 'Penarikan saldo Rp 150.000 sedang diproses', time: '3 jam lalu', unread: false },
+    { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
+  ];
 
   useEffect(()=>{
     api.get('/user').then(r=>setUser(r.data)).catch(()=>{});
@@ -65,9 +75,19 @@ export default function Dashboard(){
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar />
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
-      <main className="flex-1 p-8">
+      <main className="flex-1 px-8 pt-8 pb-8 overflow-y-auto max-h-screen">
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden mb-4 p-2 bg-simgreen-600 text-white rounded-lg shadow-lg"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -75,12 +95,61 @@ export default function Dashboard(){
             <p className="text-sm text-gray-500">Kelola sampah Anda dengan mudah</p>
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative p-2 hover:bg-gray-100 rounded-lg">
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {/* Notification Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifications.filter(n => n.unread).length > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+
+              {/* Dropdown */}
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-gray-800">Notifikasi</h3>
+                      <span className="text-xs bg-simgreen-500 text-white px-2 py-1 rounded-full">
+                        {notifications.filter(n => n.unread).length} baru
+                      </span>
+                    </div>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.map((notif) => (
+                      <div 
+                        key={notif.id}
+                        className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${notif.unread ? 'bg-simgreen-50' : ''}`}
+                      >
+                        <div className="flex gap-3">
+                          <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${
+                            notif.type === 'success' ? 'bg-green-500' :
+                            notif.type === 'warning' ? 'bg-yellow-500' :
+                            'bg-blue-500'
+                          }`}></div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-sm text-gray-800">{notif.title}</h4>
+                            <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
+                            <span className="text-xs text-gray-400 mt-2 inline-block">{notif.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-3 text-center border-t border-gray-200">
+                    <button className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
+                      Lihat Semua Notifikasi
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
                 {user?.name?.charAt(0) || 'A'}
@@ -99,7 +168,7 @@ export default function Dashboard(){
             <span className="text-2xl">👋</span>
             <h2 className="text-xl font-bold">Selamat Datang, {user?.name || 'Ahmad Rizki'}!</h2>
           </div>
-          <p className="text-white/90">Mari kelola sampah dan dapatkan keuntungan bersama SIMBASFA</p>
+          <p className="text-white/90">Mari kelola sampah dan dapatkan keuntungan bersama BANGKIT</p>
         </div>
 
         {/* Saldo Card */}
@@ -126,7 +195,7 @@ export default function Dashboard(){
           <h3 className="text-lg font-bold text-gray-800 mb-4">Menu Utama</h3>
           <div className="grid grid-cols-4 gap-4">
             {/* Setor Sampah */}
-            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+            <Link to="/setor-sampah" className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer block">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
                 <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
@@ -134,7 +203,7 @@ export default function Dashboard(){
               </div>
               <h4 className="font-semibold text-gray-800 mb-1">Setor Sampah</h4>
               <p className="text-xs text-gray-500">Setor sampah dan dapatkan saldo</p>
-            </div>
+            </Link>
 
             {/* Tarik Saldo */}
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
@@ -211,7 +280,7 @@ export default function Dashboard(){
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">Setor Sampah Organik</div>
-                  <div className="text-xs text-gray-500">15 Desember 2024, 10:21</div>
+                  <div className="text-xs text-gray-500">15 November 2025, 10:21</div>
                 </div>
               </div>
               <div className="text-right">
@@ -230,7 +299,7 @@ export default function Dashboard(){
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">Penarikan Saldo</div>
-                  <div className="text-xs text-gray-500">12 Desember 2024, 14:20</div>
+                  <div className="text-xs text-gray-500">12 November 2025, 14:20</div>
                 </div>
               </div>
               <div className="text-right">
@@ -249,7 +318,7 @@ export default function Dashboard(){
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">Setor Sampah Anorganik</div>
-                  <div className="text-xs text-gray-500">10 Desember 2024, 09:15</div>
+                  <div className="text-xs text-gray-500">10 November 2025, 09:15</div>
                 </div>
               </div>
               <div className="text-right">
@@ -268,7 +337,7 @@ export default function Dashboard(){
                 </div>
                 <div>
                   <div className="font-semibold text-gray-800">Setor Sampah Organik</div>
-                  <div className="text-xs text-gray-500">08 Desember 2024, 11:47</div>
+                  <div className="text-xs text-gray-500">08 November 2025, 11:47</div>
                 </div>
               </div>
               <div className="text-right">
