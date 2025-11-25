@@ -9,13 +9,15 @@ return new class extends Migration {
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->enum('type', ['setor', 'tarik']);
             $table->string('category');
             $table->decimal('weight', 8,2);
             $table->decimal('amount', 12,2);
             $table->string('notes')->nullable();
             $table->timestamps();
+            $table->engine = 'InnoDB';
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
