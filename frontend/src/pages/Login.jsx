@@ -14,11 +14,22 @@ export default function Login(){
     e && e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post('/login', { email, password });
+      // Pastikan endpoint sesuai dengan backend (biasanya /api/login)
+      const res = await api.post('login', { email, password });
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (err) {
-      alert(err.response?.data?.message || 'Login gagal');
+      console.error('Terjadi kesalahan saat login:', err);
+      if (err.response?.status === 404) {
+        alert('Endpoint login tidak ditemukan (404). Pastikan backend sudah berjalan dan route /api/login tersedia.');
+      } else if (err.response?.data?.message) {
+        alert('Login gagal: ' + err.response.data.message);
+      } else if (err.code === 'ERR_NETWORK') {
+        alert('Gagal terhubung ke server. Pastikan backend berjalan dan koneksi internet stabil.');
+      } else {
+        alert('Login gagal. Silakan cek console untuk detail error.');
+      }
     } finally { setLoading(false); }
   };
 
@@ -187,15 +198,15 @@ export default function Login(){
                 </svg>
                 <span>Belum punya akun?</span>
               </div>
-              <a 
-                href="#" 
+              <button 
+                onClick={() => navigate('/register')}
                 className="text-simgreen-600 hover:text-simgreen-700 text-sm font-medium inline-flex items-center gap-1"
               >
                 Klik di sini untuk daftar melalui Google Form
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-              </a>
+              </button>
             </div>
           </div>
 
@@ -204,6 +215,22 @@ export default function Login(){
             <a href="#" className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
               Hubungi support
             </a>
+          </div>
+
+          {/* Admin Login Link */}
+          <div className="mt-4 pt-4 border-t border-gray-200 text-center">
+            <button 
+              onClick={() => navigate('/login-admin')}
+              className="text-sm text-gray-600 hover:text-simgreen-600 font-medium inline-flex items-center gap-2 group"
+            >
+              <svg className="w-4 h-4 group-hover:text-simgreen-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+              Login sebagai Admin
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
