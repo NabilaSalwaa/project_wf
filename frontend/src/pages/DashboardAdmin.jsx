@@ -157,172 +157,173 @@ function StatCard({ stat }) {
 export default function DashboardAdmin() {
   const [activeMenu, setActiveMenu] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
   return (
-    <div className="flex flex-row min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      {sidebarOpen && (
-        <aside className="w-64 bg-white border-r flex flex-col justify-between relative">
-          {/* Tombol X untuk close sidebar di mobile */}
-          <button
-            className="absolute top-4 right-4 md:hidden text-gray-400 hover:text-gray-700"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Tutup Sidebar"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <div>
-            <div className="p-6 flex items-center gap-3 border-b">
-              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24">
-                  <rect x="4" y="7" width="16" height="10" rx="2" fill="#fff" />
-                  <rect x="9" y="10" width="6" height="5" rx="1" fill="#22C55E" />
-                  <rect x="10" y="11" width="4" height="3" rx="0.5" fill="#fff" />
-                </svg>
-              </div>
-              <div>
-                <div className="font-bold text-lg text-slate-800">BANGKIT</div>
-                <div className="text-xs text-gray-400">Bank Sampah Digital</div>
-              </div>
-            </div>
-            <nav className="p-4 space-y-1">
-              {sidebarMenu.map((item, i) => (
-                <button
-                  key={item.label}
-                  onClick={() => setActiveMenu(i)}
-                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg font-semibold transition-all duration-150 text-left
-                    ${activeMenu === i ? 'bg-green-600 text-white' : 'text-[#1E293B]'}
-                    ${activeMenu !== i ? 'hover:bg-[#D1FADF] hover:text-green-600' : ''}`}
-                >
-                  <span className="w-5 h-5 flex items-center justify-center">
-                    {React.cloneElement(item.icon, {
-                      stroke: activeMenu === i ? '#fff' : '#1E293B',
-                      fill: 'none',
-                    })}
-                  </span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-          {/* Tombol Keluar selalu di bawah sidebar */}
-          <div className="p-4 mt-auto">
-            <button className="w-full flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-red-600 hover:bg-red-50 transition-all">
-              <svg className="w-5 h-5" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="flex flex-row flex-1">
+        {/* Sidebar */}
+        {sidebarOpen && (
+          <aside className="w-64 bg-white border-r flex flex-col justify-between relative">
+            {/* Tombol X untuk close sidebar di mobile */}
+            <button
+              className="absolute top-4 right-4 md:hidden text-gray-400 hover:text-gray-700"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Tutup Sidebar"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
-              <span>Keluar</span>
             </button>
-          </div>
-        </aside>
-      )}
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        {/* Tombol buka sidebar di mobile */}
-        {!sidebarOpen && (
-          <button
-            className="mb-4 md:hidden text-gray-400 hover:text-gray-700"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Buka Sidebar"
-          >
-            <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        )}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">Dashboard Admin</h1>
-            <div className="text-base text-gray-500 font-medium">Selamat datang di panel admin BANGKIT</div>
-          </div>
-          <div className="flex items-center gap-3">
-            <img src="https://randomuser.me/api/portraits/men/6.jpg" alt="Admin" className="w-12 h-12 rounded-full border-2 border-green-200" />
-            <div className="flex flex-col items-start">
-              <span className="font-bold text-lg text-gray-800 leading-tight">Admin User</span>
-              <span className="text-sm text-gray-500 font-medium">admin@iqbankku.com</span>
-            </div>
-          </div>
-        </div>
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-6 mb-8">
-          {statCards.map((stat, i) => (
-            <StatCard key={i} stat={stat} />
-          ))}
-        </div>
-        <div className="grid grid-cols-2 gap-8">
-          {/* Pie Chart */}
-          <div className="bg-white rounded-xl border shadow-sm p-6 flex flex-col justify-between min-h-[340px]">
-            <div className="font-semibold mb-4">Distribusi Jenis Sampah</div>
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  labelLine={false}
-                  label={false}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value, name) => [`${value}%`, name]} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="flex justify-center gap-6 mt-4">
-              {pieData.map((d, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full" style={{background: d.color}}></span>
-                  <span className="text-sm font-bold" style={{color: d.color}}>{d.name}</span>
-                  <span className="text-sm font-bold" style={{color: d.color}}>{d.value}%</span>
+            <div>
+              <div className="p-6 flex items-center gap-3 border-b">
+                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24">
+                    <rect x="4" y="7" width="16" height="10" rx="2" fill="#fff" />
+                    <rect x="9" y="10" width="6" height="5" rx="1" fill="#22C55E" />
+                    <rect x="10" y="11" width="4" height="3" rx="0.5" fill="#fff" />
+                  </svg>
                 </div>
-              ))}
+                <div>
+                  <div className="font-bold text-lg text-slate-800">BANGKIT</div>
+                  <div className="text-xs text-gray-400">Bank Sampah Digital</div>
+                </div>
+              </div>
+              <nav className="p-4 space-y-1">
+                {sidebarMenu.map((item, i) => (
+                  <button
+                    key={item.label}
+                    onClick={() => setActiveMenu(i)}
+                    className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg font-semibold transition-all duration-150 text-left
+                      ${activeMenu === i ? 'bg-green-600 text-white' : 'text-[#1E293B]'}
+                      ${activeMenu !== i ? 'hover:bg-[#D1FADF] hover:text-green-600' : ''}`}
+                  >
+                    <span className="w-5 h-5 flex items-center justify-center">
+                      {React.cloneElement(item.icon, {
+                        stroke: activeMenu === i ? '#fff' : '#1E293B',
+                        fill: 'none',
+                      })}
+                    </span>
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </nav>
+            </div>
+            {/* Tombol Keluar selalu di bawah sidebar */}
+            <div className="p-4 mt-auto">
+              <button className="w-full flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-red-600 hover:bg-red-50 transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                </svg>
+                <span>Keluar</span>
+              </button>
+            </div>
+          </aside>
+        )}
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col px-8">
+          {/* Tombol buka sidebar di mobile */}
+          {!sidebarOpen && (
+            <button
+              className="mb-4 md:hidden text-gray-400 hover:text-gray-700"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Buka Sidebar"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+          <div className="mb-8 flex items-center justify-between gap-12 mt-6">
+            <div className="flex flex-col justify-center">
+              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">Dashboard Admin</h1>
+              <div className="text-lg text-gray-500 font-medium">Selamat datang di panel admin BANGKIT</div>
+            </div>
+            <div className="flex items-center gap-5">
+              <img src="https://randomuser.me/api/portraits/men/6.jpg" alt="Admin" className="w-14 h-14 rounded-full border-2 border-green-200 object-cover" />
+              <div className="flex flex-col justify-center">
+                <span className="font-bold text-xl text-gray-800 leading-tight">Admin User</span>
+                <span className="text-base text-gray-500 font-medium">admin@iqbankku.com</span>
+              </div>
             </div>
           </div>
-          {/* Transaksi Terbaru */}
-          <div className="bg-white rounded-xl border shadow-sm p-6 min-h-[340px]">
-            <div className="font-semibold mb-4">Transaksi Terbaru</div>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-gray-400 border-b">
-                  <th className="text-left py-2 font-medium">Nasabah</th>
-                  <th className="text-left py-2 font-medium">Jenis</th>
-                  <th className="text-left py-2 font-medium">Jumlah</th>
-                  <th className="text-left py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx, i) => (
-                  <tr key={i} className="border-b last:border-none hover:bg-gray-50 transition-all">
-                    <td className="py-2 flex items-center gap-2">
-                      <img src={tx.avatar} alt={tx.name} className="w-7 h-7 rounded-full border-2 border-gray-200" />
-                      <span className="font-medium text-gray-700">{tx.name}</span>
-                    </td>
-                    <td className="py-2">{tx.type}</td>
-                    <td className="py-2 font-semibold">{formatRupiah(tx.amount)}</td>
-                    <td className="py-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold shadow ${tx.status === 'Selesai' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{tx.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-6 mb-8 mt-6">
+            {statCards.map((stat, i) => (
+              <StatCard key={i} stat={stat} />
+            ))}
           </div>
-        </div>
-        <footer className="w-full bg-white border-t py-6 text-xs text-gray-400 flex items-center justify-center mt-auto">
-          <span>© 2025 BANGKIT – Bank Sampah Digital. All rights reserved.</span>
-        </footer>
-      </main>
+          <div className="grid grid-cols-2 gap-8">
+            {/* Pie Chart */}
+            <div className="bg-white rounded-xl border shadow-sm p-6 flex flex-col justify-between min-h-[340px]">
+              <div className="font-semibold mb-4">Distribusi Jenis Sampah</div>
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    labelLine={false}
+                    label={false}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-6 mt-4">
+                {pieData.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full" style={{background: d.color}}></span>
+                    <span className="text-sm font-bold" style={{color: d.color}}>{d.name}</span>
+                    <span className="text-sm font-bold" style={{color: d.color}}>{d.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Transaksi Terbaru */}
+            <div className="bg-white rounded-xl border shadow-sm p-6 min-h-[340px]">
+              <div className="font-semibold mb-4">Transaksi Terbaru</div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-gray-400 border-b">
+                    <th className="text-left py-2 font-medium">Nasabah</th>
+                    <th className="text-left py-2 font-medium">Jenis</th>
+                    <th className="text-left py-2 font-medium">Jumlah</th>
+                    <th className="text-left py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((tx, i) => (
+                    <tr key={i} className="border-b last:border-none hover:bg-gray-50 transition-all">
+                      <td className="py-2 flex items-center gap-2">
+                        <img src={tx.avatar} alt={tx.name} className="w-7 h-7 rounded-full border-2 border-gray-200" />
+                        <span className="font-medium text-gray-700">{tx.name}</span>
+                      </td>
+                      <td className="py-2">{tx.type}</td>
+                      <td className="py-2 font-semibold">{formatRupiah(tx.amount)}</td>
+                      <td className="py-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold shadow ${tx.status === 'Selesai' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{tx.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+      <footer className="w-full h-20 bg-white border-t text-base text-gray-400 flex items-center justify-center">
+        <span>© 2025 BANGKIT – Bank Sampah Digital. All rights reserved.</span>
+      </footer>
     </div>
-  );
-}
+    );
+    }
 
 
 
