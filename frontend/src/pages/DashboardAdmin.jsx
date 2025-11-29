@@ -1,66 +1,69 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 const sidebarMenu = [
   {
     label: 'Dashboard',
+    path: '/admin/dashboard',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#22C55E" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m4-8v8m-7 4h14" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
       </svg>
     ),
   },
   {
     label: 'Data Nasabah',
+    path: '/admin/data-nasabah',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#1E293B" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="7" r="4" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 21v-2a4 4 0 018 0v2" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
       </svg>
     ),
   },
   {
     label: 'Data Sampah + Deteksi',
+    path: '/admin/data-sampah',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#1E293B" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="3" y="3" width="18" height="18" rx="2" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 9h8M8 15h8" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
       </svg>
     ),
   },
   {
     label: 'Verifikasi Deteksi',
+    path: '/admin/verifikasi',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#1E293B" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
       </svg>
     ),
   },
   {
     label: 'Transaksi',
+    path: '/admin/transaksi',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#1E293B" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="3" y="7" width="18" height="10" rx="2" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16 3v4M8 3v4" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+        <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 16H17a1 1 0 001-1v-5a1 1 0 00-.293-.707l-2-2A1 1 0 0015 7h-1z" />
       </svg>
     ),
   },
   {
     label: 'Laporan',
+    path: '/admin/laporan',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#1E293B" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="4" y="4" width="16" height="16" rx="2" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 8h8M8 12h8M8 16h8" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
       </svg>
     ),
   },
   {
     label: 'Pengaturan',
+    path: '/admin/pengaturan',
     icon: (
-      <svg className="w-5 h-5" fill="none" stroke="#1E293B" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h.09a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51h.09a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.09a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
       </svg>
     ),
   },
@@ -71,53 +74,26 @@ const statCards = [
     title: 'Total Nasabah',
     value: '1,247',
     subtitle: '+12% dari bulan lalu',
-    color: 'text-green-600',
-    badge: 'bg-green-100 text-green-600',
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="#22C55E" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="8" r="4" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 20v-2a4 4 0 018 0v2" />
-      </svg>
-    ),
+    trend: 'up',
+    icon: '📈',
   },
   {
     title: 'Total Setoran',
     value: 'Rp 45.2M',
     subtitle: '+8.5% dari bulan lalu',
-    color: 'text-green-600',
-    badge: 'bg-green-100 text-green-600',
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="#22C55E" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
-        <circle cx="12" cy="12" r="10" stroke="#22C55E" strokeWidth="2" />
-      </svg>
-    ),
+    trend: 'up',
   },
   {
     title: 'Total Penarikan',
     value: 'Rp 32.1M',
     subtitle: '-3.2% dari bulan lalu',
-    color: 'text-red-600',
-    badge: 'bg-red-100 text-red-600',
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        <circle cx="12" cy="12" r="10" stroke="#EF4444" strokeWidth="2" />
-      </svg>
-    ),
+    trend: 'down',
   },
   {
     title: 'Butuh Verifikasi',
     value: '23',
     subtitle: 'data menunggu verifikasi',
-    color: 'text-yellow-600',
-    badge: 'bg-yellow-100 text-yellow-600',
-    icon: (
-      <svg className="w-7 h-7" fill="none" stroke="#F59E42" strokeWidth="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="10" stroke="#F59E42" strokeWidth="2" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m0-4h.01" />
-      </svg>
-    ),
+    trend: 'warning',
   },
 ];
 
@@ -127,27 +103,43 @@ const pieData = [
 ];
 
 const transactions = [
-  { name: 'Sari Dewi', type: 'Setoran', amount: 125000, status: 'Selesai', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
-  { name: 'Budi Santoso', type: 'Penarikan', amount: 75000, status: 'Proses', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
-  { name: 'Maya Putri', type: 'Setoran', amount: 200000, status: 'Selesai', avatar: 'https://randomuser.me/api/portraits/women/3.jpg' },
-  { name: 'Agus Rahman', type: 'Setoran', amount: 90000, status: 'Proses', avatar: 'https://randomuser.me/api/portraits/men/4.jpg' },
-  { name: 'Lisa Handayani', type: 'Penarikan', amount: 150000, status: 'Selesai', avatar: 'https://randomuser.me/api/portraits/women/5.jpg' },
+  { name: 'Sari Dewi', type: 'Setoran', amount: 'Rp 125,000', status: 'Selesai', avatar: 'https://ui-avatars.com/api/?name=Sari+Dewi&background=22C55E&color=fff' },
+  { name: 'Budi Santoso', type: 'Penarikan', amount: 'Rp 75,000', status: 'Proses', avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=3B82F6&color=fff' },
+  { name: 'Maya Putri', type: 'Setoran', amount: 'Rp 200,000', status: 'Selesai', avatar: 'https://ui-avatars.com/api/?name=Maya+Putri&background=22C55E&color=fff' },
+  { name: 'Agus Rahman', type: 'Setoran', amount: 'Rp 90,000', status: 'Proses', avatar: 'https://ui-avatars.com/api/?name=Agus+Rahman&background=3B82F6&color=fff' },
+  { name: 'Lisa Handayani', type: 'Penarikan', amount: 'Rp 150,000', status: 'Selesai', avatar: 'https://ui-avatars.com/api/?name=Lisa+Handayani&background=22C55E&color=fff' },
 ];
 
-function formatRupiah(num) {
-  if (!num) return '-';
-  return 'Rp ' + Number(num).toLocaleString('id-ID');
-}
-
 function StatCard({ stat }) {
+  const getTrendColor = (trend) => {
+    if (trend === 'up') return 'text-green-600';
+    if (trend === 'down') return 'text-red-600';
+    return 'text-orange-600';
+  };
+
+  const getTrendBg = (trend) => {
+    if (trend === 'up') return 'bg-green-50';
+    if (trend === 'down') return 'bg-red-50';
+    return 'bg-orange-50';
+  };
+
   return (
-    <div className="bg-white rounded-xl border shadow-sm p-6 flex flex-col items-center min-w-[200px]">
-      <div className="flex items-center gap-2 mb-2">
-        {stat.icon}
-        <span className={`text-2xl font-bold ${stat.color}`}>{stat.value}</span>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <p className="text-sm text-gray-500 mb-1">{stat.title}</p>
+          <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
+        </div>
+        <div className={`w-10 h-10 rounded-lg ${getTrendBg(stat.trend)} flex items-center justify-center`}>
+          {stat.icon && <span className="text-xl">{stat.icon}</span>}
+          {stat.trend === 'up' && !stat.icon && <span className="text-green-600 text-xl">↗</span>}
+          {stat.trend === 'down' && !stat.icon && <span className="text-red-600 text-xl">↘</span>}
+          {stat.trend === 'warning' && !stat.icon && <span className="text-orange-600 text-xl">⚠</span>}
+        </div>
       </div>
-      <div className="font-semibold text-gray-700">{stat.title}</div>
-      <div className={`text-xs font-medium ${stat.badge} px-2 py-1 rounded-full inline-block mt-1`}>{stat.subtitle}</div>
+      <p className={`text-xs font-medium ${getTrendColor(stat.trend)}`}>
+        {stat.subtitle}
+      </p>
     </div>
   );
 }
@@ -155,107 +147,136 @@ function StatCard({ stat }) {
 
 
 export default function DashboardAdmin() {
+  const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const handleMenuClick = (index, path) => {
+    setActiveMenu(index);
+    if (path) {
+      navigate(path);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    navigate('/login-admin');
+  };
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <div className="flex flex-row flex-1">
-        {/* Sidebar */}
-        {sidebarOpen && (
-          <aside className="w-64 bg-white border-r flex flex-col justify-between relative">
-            {/* Tombol X untuk close sidebar di mobile */}
-            <button
-              className="absolute top-4 right-4 md:hidden text-gray-400 hover:text-gray-700"
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Tutup Sidebar"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div>
-              <div className="p-6 flex items-center gap-3 border-b">
-                <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24">
-                    <rect x="4" y="7" width="16" height="10" rx="2" fill="#fff" />
-                    <rect x="9" y="10" width="6" height="5" rx="1" fill="#22C55E" />
-                    <rect x="10" y="11" width="4" height="3" rx="0.5" fill="#fff" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-bold text-lg text-slate-800">BANGKIT</div>
-                  <div className="text-xs text-gray-400">Bank Sampah Digital</div>
-                </div>
-              </div>
-              <nav className="p-4 space-y-1">
-                {sidebarMenu.map((item, i) => (
-                  <button
-                    key={item.label}
-                    onClick={() => setActiveMenu(i)}
-                    className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg font-semibold transition-all duration-150 text-left
-                      ${activeMenu === i ? 'bg-green-600 text-white' : 'text-[#1E293B]'}
-                      ${activeMenu !== i ? 'hover:bg-[#D1FADF] hover:text-green-600' : ''}`}
-                  >
-                    <span className="w-5 h-5 flex items-center justify-center">
-                      {React.cloneElement(item.icon, {
-                        stroke: activeMenu === i ? '#fff' : '#1E293B',
-                        fill: 'none',
-                      })}
-                    </span>
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-            {/* Tombol Keluar selalu di bawah sidebar */}
-            <div className="p-4 mt-auto">
-              <button className="w-full flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-red-600 hover:bg-red-50 transition-all">
-                <svg className="w-5 h-5" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-white border-r border-gray-200 flex-shrink-0 transition-all duration-300 overflow-hidden`}>
+        <div className="h-full flex flex-col">
+          {/* Logo */}
+          <div className="px-10 py-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-green-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+                  <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
-                <span>Keluar</span>
-              </button>
-            </div>
-          </aside>
-        )}
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col px-8">
-          {/* Tombol buka sidebar di mobile */}
-          {!sidebarOpen && (
-            <button
-              className="mb-4 md:hidden text-gray-400 hover:text-gray-700"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Buka Sidebar"
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          )}
-          <div className="mb-8 flex items-center justify-between gap-12 mt-6">
-            <div className="flex flex-col justify-center">
-              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">Dashboard Admin</h1>
-              <div className="text-lg text-gray-500 font-medium">Selamat datang di panel admin BANGKIT</div>
-            </div>
-            <div className="flex items-center gap-5">
-              <img src="https://randomuser.me/api/portraits/men/6.jpg" alt="Admin" className="w-14 h-14 rounded-full border-2 border-green-200 object-cover" />
+              </div>
               <div className="flex flex-col justify-center">
-                <span className="font-bold text-xl text-gray-800 leading-tight">Admin User</span>
-                <span className="text-base text-gray-500 font-medium">admin@iqbankku.com</span>
+                <div className="font-bold text-gray-800 text-xl">BANGKIT</div>
+                <div className="text-[10px] text-gray-500">Bank Sampah Digital</div>
               </div>
             </div>
           </div>
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-6 mb-8 mt-6">
+
+          {/* Divider */}
+          <div className="px-10 pb-3 border-b-2 border-gray-200"></div>
+
+          {/* Menu */}
+          <nav className="flex-1 p-3 space-y-1">
+            {sidebarMenu.map((item, i) => (
+              <button
+                key={item.label}
+                onClick={() => handleMenuClick(i, item.path)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium transition-all text-left text-sm
+                  ${activeMenu === i 
+                    ? 'bg-green-600 text-white shadow-sm' 
+                    : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
+
+          {/* Logout Button */}
+          <div className="p-3">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg font-medium text-red-600 hover:bg-red-50 transition-all text-sm border border-red-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Keluar</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard Admin</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Selamat datang di panel admin BANGKIT</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {/* Notification Icon */}
+              <button className="relative p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              
+              {/* Mail Icon */}
+              <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </button>
+
+              {/* Admin User Profile */}
+              <div className="flex items-center gap-2.5">
+                <img 
+                  src="https://ui-avatars.com/api/?name=Admin+User&background=22C55E&color=fff&size=36" 
+                  alt="Admin User" 
+                  className="w-9 h-9 rounded-full"
+                />
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-gray-900">Admin User</p>
+                  <p className="text-[11px] text-gray-500">admin@bangkit.com</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 p-8 overflow-auto">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {statCards.map((stat, i) => (
               <StatCard key={i} stat={stat} />
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-8">
+
+          {/* Charts and Table */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Pie Chart */}
-            <div className="bg-white rounded-xl border shadow-sm p-6 flex flex-col justify-between min-h-[340px]">
-              <div className="font-semibold mb-4">Distribusi Jenis Sampah</div>
-              <ResponsiveContainer width="100%" height={220}>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Distribusi Jenis Sampah</h3>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -263,67 +284,81 @@ export default function DashboardAdmin() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={2}
+                    innerRadius={70}
+                    outerRadius={100}
+                    paddingAngle={3}
                     labelLine={false}
-                    label={false}
+                    label={({ name, value }) => `${value}%`}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                  <Tooltip formatter={(value) => `${value}%`} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex justify-center gap-6 mt-4">
+              <div className="flex justify-center gap-8 mt-6">
                 {pieData.map((d, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full" style={{background: d.color}}></span>
-                    <span className="text-sm font-bold" style={{color: d.color}}>{d.name}</span>
-                    <span className="text-sm font-bold" style={{color: d.color}}>{d.value}%</span>
+                    <span className="w-3 h-3 rounded-full" style={{backgroundColor: d.color}}></span>
+                    <span className="text-sm font-medium text-gray-700">{d.name}</span>
                   </div>
                 ))}
               </div>
             </div>
-            {/* Transaksi Terbaru */}
-            <div className="bg-white rounded-xl border shadow-sm p-6 min-h-[340px]">
-              <div className="font-semibold mb-4">Transaksi Terbaru</div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-gray-400 border-b">
-                    <th className="text-left py-2 font-medium">Nasabah</th>
-                    <th className="text-left py-2 font-medium">Jenis</th>
-                    <th className="text-left py-2 font-medium">Jumlah</th>
-                    <th className="text-left py-2 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.map((tx, i) => (
-                    <tr key={i} className="border-b last:border-none hover:bg-gray-50 transition-all">
-                      <td className="py-2 flex items-center gap-2">
-                        <img src={tx.avatar} alt={tx.name} className="w-7 h-7 rounded-full border-2 border-gray-200" />
-                        <span className="font-medium text-gray-700">{tx.name}</span>
-                      </td>
-                      <td className="py-2">{tx.type}</td>
-                      <td className="py-2 font-semibold">{formatRupiah(tx.amount)}</td>
-                      <td className="py-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold shadow ${tx.status === 'Selesai' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{tx.status}</span>
-                      </td>
+
+            {/* Transactions Table */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Transaksi Terbaru</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Nasabah</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Jenis</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {transactions.map((tx, i) => (
+                      <tr key={i} className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-2">
+                          <div className="flex items-center gap-2">
+                            <img src={tx.avatar} alt={tx.name} className="w-8 h-8 rounded-full" />
+                            <span className="text-sm font-medium text-gray-900">{tx.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-2 text-sm text-gray-600">{tx.type}</td>
+                        <td className="py-3 px-2 text-sm font-semibold text-gray-900">{tx.amount}</td>
+                        <td className="py-3 px-2">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                            ${tx.status === 'Selesai' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                            {tx.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </main>
+
+        {/* Footer */}
+        <footer className="bg-white border-t border-gray-200 py-5 px-8">
+          <p className="text-sm text-gray-500 text-center">
+            © 2025 BANGKIT – Bank Sampah Digital. All rights reserved.
+          </p>
+        </footer>
       </div>
-      <footer className="w-full h-20 bg-white border-t text-base text-gray-400 flex items-center justify-center">
-        <span>© 2025 BANGKIT – Bank Sampah Digital. All rights reserved.</span>
-      </footer>
     </div>
-    );
-    }
+  );
+}
 
 
 

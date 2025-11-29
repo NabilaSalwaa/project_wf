@@ -1,6 +1,10 @@
+# CORS dihandle di PHP file langsung (login.php, dll)
+# Jangan set CORS di .htaccess biar ga konflik
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /web%20framework/backend/api/
+    
+    # Jangan redirect jika file .php sudah ada
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ index.php/$1 [L]

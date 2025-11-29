@@ -1,0 +1,60 @@
+# Dependencies
+/backend/vendor/
+/frontend/node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+/backend/storage/logs/*
+!/backend/storage/logs/.gitkeep
+
+# Cache & Build
+/backend/storage/framework/cache/*
+!/backend/storage/framework/cache/.gitkeep
+/backend/storage/framework/sessions/*
+!/backend/storage/framework/sessions/.gitkeep
+/backend/storage/framework/views/*
+!/backend/storage/framework/views/.gitkeep
+/frontend/dist/
+/frontend/.vite/
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup Files
+*.bak
+*.backup
+*.old
+*.temp
+*~
+
+# Temporary Files
+*.tmp
+temp/
+tmp/
+
+# Database Files
+*.sql.gz
+*.sql.bak
+*.sqlite
+*.sqlite3
+
+# Compiled Files
+*.compiled
+
+# Node
+package-lock.json.backup

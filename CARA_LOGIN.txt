@@ -1,0 +1,188 @@
+╔═══════════════════════════════════════════════════════╗
+║                                                       ║
+║     🔐 CARA LOGIN - SUPER MUDAH!                     ║
+║        BANGKIT - Bank Sampah Digital                 ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝
+
+📝 LANGKAH-LANGKAH LOGIN (5 MENIT!)
+═══════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────┐
+│  LANGKAH 1: PASTIKAN MYSQL RUNNING                  │
+└─────────────────────────────────────────────────────┘
+
+1. Buka File Explorer
+2. Pergi ke: C:\XAMPP_NEW
+3. Double-click: xampp-control.exe
+4. Cari baris "MySQL"
+5. Klik tombol [Start]
+6. Tunggu sampai lampu jadi HIJAU
+7. ✅ MySQL siap!
+
+┌─────────────────────────────────────────────────────┐
+│  LANGKAH 2: SETUP DATABASE (PERTAMA KALI AJA!)     │
+└─────────────────────────────────────────────────────┘
+
+1. Buka File Explorer
+2. Pergi ke: C:\XAMPP_NEW\htdocs\web framework
+3. Double-click file: SETUP-SEEDER.bat
+4. Tunggu sampai muncul tulisan:
+   
+   ✓ SETUP BERHASIL! ✓
+   
+   User NASABAH: ahmadriski@gmail.com
+   User ADMIN: admin@bangkit.com
+
+5. Tekan tombol apa saja untuk tutup
+6. ✅ Database & User siap!
+
+⚠️ NOTE: Langkah 2 cukup 1x aja! Kalau sudah pernah, skip ke langkah 3.
+
+┌─────────────────────────────────────────────────────┐
+│  LANGKAH 3: JALANKAN APLIKASI                       │
+└─────────────────────────────────────────────────────┘
+
+1. Masih di folder yang sama: web framework
+2. Double-click file: START-FIXED.bat
+3. Tunggu beberapa detik...
+4. Otomatis akan buka:
+   - 2 Terminal (backend & frontend)
+   - 2 Browser tab
+
+5. ✅ Aplikasi berjalan!
+
+┌─────────────────────────────────────────────────────┐
+│  LANGKAH 4: LOGIN!                                  │
+└─────────────────────────────────────────────────────┘
+
+🔵 UNTUK NASABAH:
+
+1. Browser akan otomatis buka: http://localhost:5173
+2. Anda akan lihat halaman login
+3. Ketik:
+   
+   Email    : ahmadrizki@gmail.com
+   Password : password
+
+4. Klik tombol [Login]
+5. ✅ Masuk ke Dashboard Nasabah!
+
+🔴 UNTUK ADMIN:
+
+1. Di browser, ketik: http://localhost:5173/login-admin
+2. Atau klik "Login Admin" kalau ada
+3. Ketik:
+   
+   Email    : admin@bangkit.com
+   Password : admin123
+
+4. Klik tombol [Login]
+5. ✅ Masuk ke Dashboard Admin!
+
+═══════════════════════════════════════════════════════
+
+📋 RINGKASAN KREDENSIAL
+═══════════════════════════════════════════════════════
+
+NASABAH (Ahmad Riski):
+┌──────────────────────────────────────┐
+│ Email    : ahmadriski@gmail.com      │
+│ Password : password                  │
+│ URL      : /login                    │
+└──────────────────────────────────────┘
+
+ADMIN (Admin Bangkit):
+┌──────────────────────────────────────┐
+│ Email    : admin@bangkit.com         │
+│ Password : admin123                  │
+│ URL      : /login-admin              │
+└──────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════
+
+❓ MASALAH & SOLUSI CEPAT
+═══════════════════════════════════════════════════════
+
+MASALAH 1: "Email atau password salah"
+SOLUSI:
+  ✓ Cek huruf besar/kecil
+  ✓ Pastikan tidak ada spasi
+  ✓ Copy-paste dari sini kalau perlu
+  ✓ Kalau masih gagal, jalankan SETUP-DB.bat lagi
+
+MASALAH 2: Browser tidak buka
+SOLUSI:
+  ✓ Buka manual: http://localhost:5173
+  ✓ Kalau error, tunggu 10 detik lagi
+  ✓ Cek terminal, pastikan tidak ada error
+
+MASALAH 3: "Cannot connect to server"
+SOLUSI:
+  ✓ Pastikan MySQL sudah running (lampu hijau)
+  ✓ Pastikan kedua terminal tetap terbuka
+  ✓ Restart: tutup terminal, jalankan START-FIXED.bat lagi
+
+MASALAH 4: Lupa password
+SOLUSI:
+  ✓ Password ada di file ini (scroll ke atas)
+  ✓ NASABAH: password
+  ✓ ADMIN: admin123
+
+═══════════════════════════════════════════════════════
+
+🎯 TIPS PRO
+═══════════════════════════════════════════════════════
+
+TIP 1: Bookmark halaman login
+  - NASABAH: http://localhost:5173/login
+  - ADMIN: http://localhost:5173/login-admin
+
+TIP 2: Jangan tutup terminal hitam
+  - Biarkan terbuka selama pakai aplikasi
+  - Tutup = aplikasi mati
+
+TIP 3: Test dulu sebelum pakai beneran
+  - Buka: http://localhost:8081/test-login.html
+  - Coba login di sana dulu
+
+TIP 4: Simpan kredensial di tempat aman
+  - Atau foto file ini
+  - Atau tulis di notes HP
+
+═══════════════════════════════════════════════════════
+
+✅ CHECKLIST SEBELUM LOGIN
+═══════════════════════════════════════════════════════
+
+[ ] MySQL sudah running (lampu hijau di XAMPP)
+[ ] Database sudah di-setup (jalankan SETUP-DB.bat)
+[ ] Aplikasi sudah jalan (jalankan START-FIXED.bat)
+[ ] Browser terbuka (http://localhost:5173)
+[ ] Sudah tahu email & password yang mau dipakai
+
+Kalau semua ✓, langsung login aja!
+
+═══════════════════════════════════════════════════════
+
+📞 BUTUH BANTUAN?
+═══════════════════════════════════════════════════════
+
+1. Baca file: README.md (dokumentasi lengkap)
+2. Buka: test-login.html (untuk test)
+3. Lihat: QUICK_START.txt (panduan cepat)
+
+═══════════════════════════════════════════════════════
+
+🎉 SELAMAT MENCOBA!
+
+Kalau berhasil login, Anda akan lihat:
+- Nasabah → Dashboard dengan saldo & riwayat
+- Admin → Dashboard dengan data nasabah & transaksi
+
+Have fun! 🚀
+
+═══════════════════════════════════════════════════════
+
+Version: 1.3.0
+Updated: 2025-11-29

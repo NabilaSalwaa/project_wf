@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import api, { loginDirect } from '../api/axios';
 
 export default function Login(){
   const [email, setEmail] = useState('');
@@ -8,29 +8,44 @@ export default function Login(){
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e && e.preventDefault();
     setLoading(true);
+    setError('');
+    
+    // Validasi input
+    if (!email || !password) {
+      setError('Email dan password harus diisi');
+      setLoading(false);
+      return;
+    }
+    
     try {
-      // Pastikan endpoint sesuai dengan backend (biasanya /api/login)
-      const res = await api.post('login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard');
-    } catch (err) {
-      console.error('Terjadi kesalahan saat login:', err);
-      if (err.response?.status === 404) {
-        alert('Endpoint login tidak ditemukan (404). Pastikan backend sudah berjalan dan route /api/login tersedia.');
-      } else if (err.response?.data?.message) {
-        alert('Login gagal: ' + err.response.data.message);
-      } else if (err.code === 'ERR_NETWORK') {
-        alert('Gagal terhubung ke server. Pastikan backend berjalan dan koneksi internet stabil.');
+      // Gunakan loginDirect untuk bypass routing issue
+      const res = await loginDirect(email, password);
+      
+      if (res.data.success && res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        navigate('/dashboard');
       } else {
-        alert('Login gagal. Silakan cek console untuk detail error.');
+        setError(res.data.message || 'Login gagal');
       }
-    } finally { setLoading(false); }
+    } catch (err) {
+      console.error('Login error:', err);
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.request) {
+        setError('Tidak dapat terhubung ke server. Pastikan backend sudah berjalan.');
+      } else {
+        setError('Terjadi kesalahan. Silakan coba lagi.');
+      }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
@@ -103,6 +118,17 @@ export default function Login(){
         <div className="p-12 flex flex-col justify-center">
           <h3 className="text-2xl font-bold text-gray-800 mb-2">Login Nasabah</h3>
           <p className="text-sm text-gray-500 mb-8">Masukkan kredensial Anda untuk melanjutkan</p>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+              <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-red-800">{error}</p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
@@ -198,15 +224,15 @@ export default function Login(){
                 </svg>
                 <span>Belum punya akun?</span>
               </div>
-              <button 
-                onClick={() => navigate('/register')}
+              <a 
+                href="/register" 
                 className="text-simgreen-600 hover:text-simgreen-700 text-sm font-medium inline-flex items-center gap-1"
               >
                 Klik di sini untuk daftar melalui Google Form
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-              </button>
+              </a>
             </div>
           </div>
 
@@ -215,22 +241,6 @@ export default function Login(){
             <a href="#" className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
               Hubungi support
             </a>
-          </div>
-
-          {/* Admin Login Link */}
-          <div className="mt-4 pt-4 border-t border-gray-200 text-center">
-            <button 
-              onClick={() => navigate('/login-admin')}
-              className="text-sm text-gray-600 hover:text-simgreen-600 font-medium inline-flex items-center gap-2 group"
-            >
-              <svg className="w-4 h-4 group-hover:text-simgreen-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
-              Login sebagai Admin
-              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
         </div>
       </div>

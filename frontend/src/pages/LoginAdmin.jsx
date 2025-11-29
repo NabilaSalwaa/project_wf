@@ -34,7 +34,7 @@ export default function LoginAdmin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-green-100 to-green-200 p-6">
-      <div className="max-w-5xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
         
         {/* Left Side - Green Panel */}
         <div className="p-12 bg-gradient-to-br from-simgreen-600 to-simgreen-500 text-white flex flex-col justify-center relative overflow-hidden">
@@ -107,19 +107,16 @@ export default function LoginAdmin() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="p-12 flex flex-col justify-center">
-          <h3 className="text-2xl font-bold text-gray-800 mb-2">Login Admin</h3>
-          <div className="flex items-center gap-2 mb-8">
-            <svg className="w-4 h-4 text-simgreen-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm text-simgreen-600 font-medium">Masuk sebagai Admin</span>
+        <div className="p-12 py-16 flex flex-col justify-center">
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">Login Admin</h3>
+            <p className="text-sm text-gray-500">Masukkan kredensial Anda untuk melanjutkan</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Email Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email
               </label>
               <div className="relative">
@@ -142,7 +139,7 @@ export default function LoginAdmin() {
 
             {/* Password Input */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -162,7 +159,7 @@ export default function LoginAdmin() {
                 <button 
                   type="button" 
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,17 +176,17 @@ export default function LoginAdmin() {
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer group">
                 <input 
                   type="checkbox" 
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-simgreen-600 focus:ring-simgreen-500"
+                  className="w-4 h-4 rounded border-gray-300 text-simgreen-600 focus:ring-simgreen-500 cursor-pointer"
                 />
-                Ingat saya
+                <span className="group-hover:text-gray-800 transition">Ingat saya</span>
               </label>
-              <a className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium" href="#">
+              <a className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium transition" href="#">
                 Lupa kata sandi?
               </a>
             </div>
@@ -200,29 +197,36 @@ export default function LoginAdmin() {
               disabled={loading} 
               className="w-full bg-simgreen-600 hover:bg-simgreen-700 text-white font-semibold py-3 rounded-lg transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-              {loading ? 'Memproses...' : 'Masuk ke Dashboard Admin'}
+              {loading ? 'Loading...' : 'Login'}
+              {!loading && (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              )}
             </button>
           </form>
 
-          {/* Admin Info */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          {/* Access Restricted Notice */}
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
-              <div className="text-xs text-blue-800 leading-relaxed">
-                <p className="font-semibold mb-1">Akses Terbatas</p>
-                <p>Panel admin hanya untuk pengguna yang memiliki akses khusus. Semua aktivitas akan direkam untuk keamanan.</p>
+              <div>
+                <h4 className="text-sm font-semibold text-blue-800 mb-1">Akses Terbatas</h4>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  Panel admin hanya untuk pengguna yang memiliki akses khusus. Jika Anda pengguna biasa, silakan gunakan aplikasi utama untuk akses ekonomis.
+                </p>
               </div>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-xs text-gray-500">
-            © 2025 BANGKIT. All rights reserved.
+          <div className="mt-6 text-center">
+            <p className="text-xs text-gray-500 mb-2">Butuh bantuan?</p>
+            <a href="#" className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
+              Hubungi support
+            </a>
           </div>
         </div>
       </div>

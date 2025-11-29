@@ -1,0 +1,137 @@
+╔═══════════════════════════════════════════════════════╗
+║                                                       ║
+║   ✅ KREDENSIAL LOGIN YANG BENAR - SUDAH FIX!        ║
+║      Database MySQL Sudah Sesuai                     ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝
+
+📌 INFORMASI PENTING:
+═══════════════════════════════════════════════════════
+
+✅ MySQL Port      : 3307 (XAMPP Custom)
+✅ Database Name   : bangkit
+✅ Database Status : SUDAH DIBUAT & READY
+✅ User Status     : 2 USER SUDAH DIBUAT
+
+═══════════════════════════════════════════════════════
+
+🔐 KREDENSIAL LOGIN NASABAH
+═══════════════════════════════════════════════════════
+
+   Email    : ahmadrizki@gmail.com
+   Password : password
+   Role     : nasabah
+   URL      : http://localhost:5173/login
+
+═══════════════════════════════════════════════════════
+
+🔐 KREDENSIAL LOGIN ADMIN
+═══════════════════════════════════════════════════════
+
+   Email    : admin@bangkit.com
+   Password : admin123
+   Role     : admin
+   URL      : http://localhost:5173/login-admin
+
+═══════════════════════════════════════════════════════
+
+📋 CARA LOGIN (MUDAH!)
+═══════════════════════════════════════════════════════
+
+1. Pastikan MySQL running (lampu hijau di XAMPP)
+   
+2. Jalankan aplikasi:
+   Double-click: START-FIXED.bat
+   
+3. Browser akan otomatis buka: http://localhost:5173
+
+4. Masukkan email & password sesuai di atas
+
+5. Klik tombol Login
+
+6. ✅ BERHASIL MASUK!
+
+═══════════════════════════════════════════════════════
+
+🔍 VERIFIKASI DATABASE
+═══════════════════════════════════════════════════════
+
+Jika ingin cek database secara manual:
+
+1. Buka phpMyAdmin: http://localhost/phpmyadmin
+   
+2. Login dengan:
+   Username: root
+   Password: (kosongkan)
+   
+3. Pilih database: bangkit
+
+4. Klik tabel: users
+
+5. Anda akan lihat 2 user:
+   - ahmadriski@gmail.com (nasabah)
+   - admin@bangkit.com (admin)
+
+═══════════════════════════════════════════════════════
+
+⚙️ KONFIGURASI TEKNIS (SUDAH BENAR!)
+═══════════════════════════════════════════════════════
+
+File yang sudah dikonfigurasi dengan benar:
+
+✅ backend/config/database.php
+   → Port: 3307 ✓
+
+✅ backend/api/login.php
+   → Port: 3307 ✓
+   → Password verify: bcrypt ✓
+
+✅ backend/setup-database-auto.php
+   → Port: 3307 ✓
+   → Users: 2 (nasabah & admin) ✓
+   → Role column: ENUM('nasabah', 'admin') ✓
+
+✅ frontend/src/api/axios.js
+   → baseURL: localhost:8081 ✓
+   → withCredentials: true ✓
+
+═══════════════════════════════════════════════════════
+
+❌ JANGAN GUNAKAN KREDENSIAL INI (LAMA/SALAH):
+═══════════════════════════════════════════════════════
+
+❌ test@example.com (DIHAPUS DARI DATABASE)
+❌ admin@example.com (TIDAK ADA)
+❌ user@test.com (TIDAK ADA)
+
+Hanya gunakan kredensial yang tertulis di atas! ☝️
+
+═══════════════════════════════════════════════════════
+
+🧪 TEST LOGIN SEKARANG
+═══════════════════════════════════════════════════════
+
+Untuk test cepat tanpa start full app:
+
+1. Buka: http://localhost:8081/test-login.html
+
+2. Test dengan:
+   - ahmadriski@gmail.com / password
+   - admin@bangkit.com / admin123
+
+3. Kalau muncul "Login berhasil" → Database benar! ✅
+
+═══════════════════════════════════════════════════════
+
+💾 FILE INI DIBUAT: 2025-11-29
+   Database terakhir di-update: 2025-11-29
+   Status: ✅ VERIFIED & WORKING
+
+═══════════════════════════════════════════════════════
+
+📌 SIMPAN FILE INI UNTUK REFERENSI!
+
+Kalau lupa password, buka file ini lagi.
+Kalau butuh reset database, jalankan: SETUP-DB.bat
+
+═══════════════════════════════════════════════════════

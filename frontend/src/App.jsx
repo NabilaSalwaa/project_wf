@@ -7,7 +7,14 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import LoginAdmin from './pages/LoginAdmin';
 import Dashboard from './pages/Dashboard';
-import AdminDashboard from './pages/AdminDashboard';
+import DashboardAdmin from './pages/DashboardAdmin';
+import DataNasabah from './pages/DataNasabah';
+import DataSampah from './pages/DataSampah';
+import DetailDeteksi from './pages/DetailDeteksi';
+import VerifikasiDeteksi from './pages/VerifikasiDeteksi';
+import Transaksi from './pages/Transaksi';
+import Laporan from './pages/Laporan';
+import Pengaturan from './pages/Pengaturan';
 import SetorSampah from './pages/SetorSampah';
 import KonfirmasiSetoran from './pages/KonfirmasiSetoran';
 import SetoranBerhasil from './pages/SetoranBerhasil';
@@ -32,7 +39,14 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/login-admin" element={<LoginAdmin />} />
       <Route path="/register" element={<RegisterForm />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+      <Route path="/admin/data-nasabah" element={<DataNasabah />} />
+      <Route path="/admin/data-sampah" element={<DataSampah />} />
+      <Route path="/admin/detail-deteksi/:id" element={<DetailDeteksi />} />
+      <Route path="/admin/verifikasi" element={<VerifikasiDeteksi />} />
+      <Route path="/admin/transaksi" element={<Transaksi />} />
+      <Route path="/admin/laporan" element={<Laporan />} />
+      <Route path="/admin/pengaturan" element={<Pengaturan />} />
       <Route
         path="/dashboard"
         element={
