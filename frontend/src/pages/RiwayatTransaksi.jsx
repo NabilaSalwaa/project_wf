@@ -14,6 +14,7 @@ export default function RiwayatTransaksi() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(localStorage.getItem('profilePhoto') || '');
 
   const notifications = [
     { id: 1, type: 'success', title: 'Setoran Berhasil', message: 'Setoran sampah 2.5 kg telah diterima', time: '5 menit lalu', unread: true },
@@ -22,32 +23,33 @@ export default function RiwayatTransaksi() {
     { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
   ];
 
-  // Data transaksi dummy (1247 transaksi)
-  const allTransaksi = [
-    {
-      id: 'TRX-2025-001247',
-      idNumber: '1247',
-      jenis: 'Setor',
-      tanggal: '15 Nov 2025',
-      waktu: '14:30 WIB',
-      jumlah: 2500000,
-      status: 'Berhasil',
-      statusColor: 'text-green-600',
-      statusBg: 'bg-green-100',
-      icon: 'setor',
-      kategori: 'Anorganik',
-      beratSampah: '15 kg',
-      jenisSampah: 'Plastik, Kardus',
-      poin: 250
-    },
-    {
-      id: 'TRX-2025-001246',
-      idNumber: '1246',
-      jenis: 'Tarik',
-      tanggal: '14 Nov 2025',
-      waktu: '09:15 WIB',
-      jumlah: 1000000,
-      status: 'Berhasil',
+  // Data transaksi - gabungkan dummy + localStorage
+  const getTransaksiData = () => {
+    const dummyTransaksi = [
+      {
+        id: 'TRX-2025-001247',
+        idNumber: '1247',
+        jenis: 'Setor',
+        tanggal: '15 Nov 2025',
+        waktu: '14:30 WIB',
+        jumlah: 2500000,
+        status: 'Berhasil',
+        statusColor: 'text-green-600',
+        statusBg: 'bg-green-100',
+        icon: 'setor',
+        kategori: 'Anorganik',
+        beratSampah: '15 kg',
+        jenisSampah: 'Plastik, Kardus',
+        poin: 250
+      },
+      {
+        id: 'TRX-2025-001246',
+        idNumber: '1246',
+        jenis: 'Tarik',
+        tanggal: '14 Nov 2025',
+        waktu: '09:15 WIB',
+        jumlah: 1000000,
+        status: 'Berhasil',
       statusColor: 'text-green-600',
       statusBg: 'bg-green-100',
       icon: 'tarik'
@@ -97,6 +99,26 @@ export default function RiwayatTransaksi() {
       poin: 320
     }
   ];
+
+    // Ambil transaksi dari localStorage
+    const localTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
+    
+    // Format transaksi dari localStorage agar sesuai dengan struktur dummy
+    const formattedLocalTransaksi = localTransaksi.map(trx => ({
+      ...trx,
+      idNumber: trx.id.split('-').pop(),
+      statusColor: trx.status === 'Diproses' || trx.status === 'Pending' ? 'text-yellow-600' : trx.status === 'Berhasil' ? 'text-green-600' : 'text-red-600',
+      statusBg: trx.status === 'Diproses' || trx.status === 'Pending' ? 'bg-yellow-100' : trx.status === 'Berhasil' ? 'bg-green-100' : 'bg-red-100',
+      icon: trx.jenis === 'Setor' ? 'setor' : 'tarik'
+    }));
+    
+    // Gabungkan dan urutkan berdasarkan timestamp
+    return [...formattedLocalTransaksi, ...dummyTransaksi].sort((a, b) => {
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    });
+  };
+
+  const allTransaksi = getTransaksiData();
 
   // Filter transaksi
   const filteredTransaksi = allTransaksi.filter(trx => {
@@ -460,9 +482,17 @@ export default function RiwayatTransaksi() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
-                A
-              </div>
+              {profilePhoto ? (
+                <img 
+                  src={profilePhoto} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full object-cover border-2 border-simgreen-500"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
+                  A
+                </div>
+              )}
               <div>
                 <div className="text-sm font-semibold text-gray-800">Ahmad Rizki</div>
                 <div className="text-xs text-gray-500">Nasabah</div>
@@ -567,14 +597,14 @@ export default function RiwayatTransaksi() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          trx.icon === 'setor' ? 'bg-green-100' : 'bg-blue-100'
+                          trx.icon === 'setor' ? 'bg-green-100' : 'bg-green-100'
                         }`}>
                           {trx.icon === 'setor' ? (
                             <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
                             </svg>
                           ) : (
-                            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 13l5 5m0 0l5-5m-5 5V6" />
                             </svg>
                           )}
@@ -587,16 +617,15 @@ export default function RiwayatTransaksi() {
                       <div className="text-xs text-gray-500">{trx.waktu}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`text-sm font-bold ${
-                        trx.icon === 'setor' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {trx.icon === 'setor' ? '+' : '-'}Rp {trx.jumlah.toLocaleString()}
+                      <div className={`text-sm font-bold text-green-600`}>
+                        +Rp {trx.jumlah.toLocaleString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${trx.statusBg} ${trx.statusColor}`}>
                         {trx.status === 'Berhasil' && '● Berhasil'}
                         {trx.status === 'Pending' && '⏱ Pending'}
+                        {trx.status === 'Diproses' && '⏱ Diproses'}
                         {trx.status === 'Gagal' && '✕ Gagal'}
                       </span>
                     </td>

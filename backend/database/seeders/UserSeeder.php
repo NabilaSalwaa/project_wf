@@ -19,8 +19,8 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        // Clear existing users first
-        DB::table('users')->truncate();
+        // Clear existing users first (using delete instead of truncate to avoid FK constraint issues)
+        DB::table('users')->delete();
         
         // User 1: NASABAH - Ahmad Rizki
         DB::table('users')->insert([

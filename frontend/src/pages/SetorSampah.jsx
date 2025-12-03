@@ -1,18 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
 export default function SetorSampah() {
-  const [formData, setFormData] = useState({
-    kategori: '',
-    jenis: '',
-    berat: '',
-    catatan: ''
-  });
+  const navigate = useNavigate();
+  const [jenisSampah, setJenisSampah] = useState('');
+  const [berat, setBerat] = useState('');
+  const [hargaPerKg, setHargaPerKg] = useState('');
+  const [catatan, setCatatan] = useState('');
+  const [foto, setFoto] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [useCamera, setUseCamera] = useState(false);
+  const [stream, setStream] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(localStorage.getItem('profilePhoto') || '');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const notifications = [
     { id: 1, type: 'success', title: 'Setoran Berhasil', message: 'Setoran sampah 2.5 kg telah diterima', time: '5 menit lalu', unread: true },
@@ -21,152 +26,147 @@ export default function SetorSampah() {
     { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
   ];
 
-  const kategoriOptions = ['Organik', 'Anorganik'];
-  const jenisOptions = {
-    'Organik': ['Daun Kering', 'Sisa Makanan', 'Sayuran Busuk', 'Buah Busuk'],
-    'Anorganik': ['Plastik', 'Kertas', 'Kardus', 'Botol Kaca', 'Kaleng', 'Besi']
+  const jenisSampahOptions = [
+    { value: 'plastik', label: 'Plastik', harga: 2000 },
+    { value: 'kertas', label: 'Kertas', harga: 1500 },
+    { value: 'logam', label: 'Logam', harga: 5000 },
+    { value: 'kaca', label: 'Kaca', harga: 1000 },
+    { value: 'kardus', label: 'Kardus', harga: 1200 },
+    { value: 'botol-plastik', label: 'Botol Plastik', harga: 2500 },
+    { value: 'kaleng', label: 'Kaleng', harga: 3000 },
+    { value: 'elektronik', label: 'Elektronik', harga: 4000 },
+  ];
+
+  const handleJenisChange = (value) => {
+    setJenisSampah(value);
+    const selected = jenisSampahOptions.find(opt => opt.value === value);
+    if (selected) {
+      setHargaPerKg(selected.harga);
+    }
   };
 
-  const handleImageChange = (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setFoto(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleCameraCapture = async () => {
-    // Cek apakah browser mendukung getUserMedia
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert('Browser Anda tidak mendukung akses kamera. Silakan gunakan tombol "Unggah Gambar".');
-      return;
-    }
-
+  const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         } 
       });
+      setStream(mediaStream);
+      setUseCamera(true);
       
-      // Create modal overlay
-      const modal = document.createElement('div');
-      modal.id = 'camera-modal';
-      modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;';
-      
-      // Create video element
-      const video = document.createElement('video');
-      video.autoplay = true;
-      video.playsInline = true;
-      video.style.cssText = 'max-width: 90%; max-height: 70vh; border-radius: 8px;';
-      video.srcObject = stream;
-      
-      // Create buttons container
-      const buttonsDiv = document.createElement('div');
-      buttonsDiv.style.cssText = 'margin-top: 20px; display: flex; gap: 16px;';
-      
-      const captureBtn = document.createElement('button');
-      captureBtn.textContent = 'Ambil Foto';
-      captureBtn.style.cssText = 'padding: 12px 24px; background: #16a34a; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600;';
-      
-      const cancelBtn = document.createElement('button');
-      cancelBtn.textContent = 'Batal';
-      cancelBtn.style.cssText = 'padding: 12px 24px; background: #dc2626; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600;';
-      
-      buttonsDiv.appendChild(captureBtn);
-      buttonsDiv.appendChild(cancelBtn);
-      
-      modal.appendChild(video);
-      modal.appendChild(buttonsDiv);
-      document.body.appendChild(modal);
-      
-      // Capture button click
-      captureBtn.onclick = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        
-        canvas.toBlob((blob) => {
-          const file = new File([blob], 'camera-capture-' + Date.now() + '.jpg', { type: 'image/jpeg' });
-          setImageFile(file);
-          setImagePreview(canvas.toDataURL('image/jpeg', 0.9));
-          
-          // Stop camera and close modal
-          stream.getTracks().forEach(track => track.stop());
-          document.body.removeChild(modal);
-        }, 'image/jpeg', 0.9);
-      };
-      
-      // Cancel button click
-      cancelBtn.onclick = () => {
-        stream.getTracks().forEach(track => track.stop());
-        document.body.removeChild(modal);
-      };
-      
-    } catch (error) {
-      console.error('Camera error:', error);
-      if (error.name === 'NotAllowedError') {
-        alert('Akses kamera ditolak. Silakan izinkan akses kamera di pengaturan browser Anda.');
-      } else if (error.name === 'NotFoundError') {
-        alert('Kamera tidak ditemukan. Pastikan perangkat Anda memiliki kamera.');
-      } else if (error.name === 'NotSupportedError') {
-        alert('Browser Anda tidak mendukung akses kamera melalui HTTP. Silakan gunakan HTTPS atau localhost.');
-      } else {
-        alert('Tidak dapat mengakses kamera: ' + error.message);
-      }
+      // Tunggu sebentar lalu set srcObject
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          videoRef.current.play().catch(err => {
+            console.error('Error playing video:', err);
+          });
+        }
+      }, 100);
+    } catch (err) {
+      alert('Tidak dapat mengakses kamera: ' + err.message);
+      console.error('Camera error:', err);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!imageFile) {
-      alert('Silakan upload gambar sampah terlebih dahulu!');
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setUseCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        const file = new File([blob], 'camera_capture.jpg', { type: 'image/jpeg' });
+        setFoto(file);
+        setPreviewUrl(URL.createObjectURL(file));
+        stopCamera();
+      }, 'image/jpeg');
+    }
+  };
+
+  const handleSubmit = async () => {
+    // Validasi
+    if (!jenisSampah || !berat || !hargaPerKg || !foto) {
+      alert('Semua field harus diisi dan foto harus diupload!');
       return;
     }
-    
+
     setLoading(true);
     
-    // Simulasi upload & deteksi AI
-    setTimeout(() => {
+    try {
+      // Langsung kirim ke halaman konfirmasi tanpa hit backend dulu
+      setTimeout(() => {
+        setLoading(false);
+        navigate('/konfirmasi-setoran', { 
+          state: { 
+            setoranData: {
+              jenis_sampah: jenisSampah,
+              berat: parseFloat(berat),
+              harga_per_kg: parseFloat(hargaPerKg),
+              total_harga: parseFloat(berat) * parseFloat(hargaPerKg),
+              catatan,
+              previewUrl,
+              foto,
+              timestamp: new Date().toISOString()
+            }
+          } 
+        });
+      }, 500);
+    } catch (error) {
       setLoading(false);
-      // Redirect ke halaman konfirmasi setelah deteksi selesai
-      navigate('/konfirmasi-setoran');
-    }, 1500);
+      console.error('Error:', error);
+      alert('Terjadi kesalahan: ' + error.message);
+    }
   };
+
+  const totalHarga = berat && hargaPerKg ? parseFloat(berat) * parseFloat(hargaPerKg) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
-      <main className="flex-1 p-8 overflow-y-auto">
-        {/* Mobile Menu Button */}
-        <button 
-          onClick={() => setSidebarOpen(true)}
-          className="md:hidden mb-4 p-2 bg-simgreen-600 text-white rounded-lg shadow-lg"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 p-8">
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden mb-4 p-2 bg-simgreen-600 text-white rounded-lg shadow-lg"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Setor Sampah</h1>
-            <p className="text-sm text-gray-500">Unggah foto sampah Anda untuk deteksi otomatis dan penilaian</p>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Notification Dropdown */}
-            <div className="relative">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Setor Sampah</h1>
+              <p className="text-sm text-gray-500">Unggah foto sampah Anda untuk deteksi otomatis dan penilaian</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {/* Notification Dropdown */}
+              <div className="relative">
               <button 
                 onClick={() => setNotifOpen(!notifOpen)}
                 className="relative p-2 hover:bg-gray-100 rounded-lg"
@@ -221,9 +221,17 @@ export default function SetorSampah() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
-                A
-              </div>
+              {profilePhoto ? (
+                <img 
+                  src={profilePhoto} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full object-cover border-2 border-simgreen-500"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
+                  A
+                </div>
+              )}
               <div>
                 <div className="text-sm font-semibold text-gray-800">Ahmad Rizki</div>
                 <div className="text-xs text-gray-500">Nasabah</div>
@@ -232,72 +240,223 @@ export default function SetorSampah() {
           </div>
         </div>
 
-        {/* Upload Image Section */}
-        <div className="bg-white rounded-2xl shadow-md p-8 mb-6">
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-            {imagePreview ? (
-              <div className="space-y-4">
-                <img src={imagePreview} alt="Preview" className="mx-auto max-h-64 rounded-lg" />
-                <button
-                  onClick={() => {
-                    setImageFile(null);
-                    setImagePreview(null);
-                  }}
-                  className="text-sm text-red-600 hover:text-red-700"
+        {/* Form Container with Max Width */}
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-md p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Jenis Sampah */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Jenis Sampah <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={jenisSampah}
+                  onChange={(e) => handleJenisChange(e.target.value)}
+                  className="w-full px-4 py-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent"
                 >
-                  Hapus Gambar
-                </button>
+                  <option value="">Pilih jenis sampah</option>
+                  {jenisSampahOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label} (Rp {opt.harga.toLocaleString('id-ID')}/kg)
+                    </option>
+                  ))}
+                </select>
               </div>
-            ) : (
-              <>
-                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
+
+              {/* Berat */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Berat (kg) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={berat}
+                  onChange={(e) => setBerat(e.target.value)}
+                  placeholder="Contoh: 2.5"
+                  className="w-full px-4 py-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Harga Per Kg (readonly) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Harga Per Kg
+                </label>
+                <input
+                  type="text"
+                  value={hargaPerKg ? `Rp ${parseFloat(hargaPerKg).toLocaleString('id-ID')}` : ''}
+                  readOnly
+                  className="w-full px-4 py-4 text-base border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-medium"
+                />
+              </div>
+
+              {/* Total Harga */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Total yang Diterima
+                </label>
+                <div className="w-full px-4 py-3 border-2 border-green-300 rounded-lg bg-green-50">
+                  <p className="text-2xl font-bold text-simgreen-600">
+                    {totalHarga > 0 ? `Rp ${totalHarga.toLocaleString('id-ID')}` : 'Rp 0'}
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Unggah Gambar Sampah</h3>
-                <p className="text-sm text-gray-500 mb-6">Drag & drop gambar atau klik untuk memilih file</p>
-                
-                <div className="flex gap-4 justify-center">
-                  <label className="px-6 py-3 bg-simgreen-600 text-white rounded-lg hover:bg-simgreen-700 cursor-pointer inline-flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Unggah Gambar
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
+              </div>
+            </div>
+
+            {/* Foto Sampah */}
+            <div className="mt-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Foto Sampah <span className="text-red-500">*</span>
+              </label>
+              
+              {!useCamera && !previewUrl && (
+                <div className="space-y-3">
+                  <label className="w-full flex items-center justify-center px-4 py-16 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-simgreen-500 hover:bg-gray-50 transition">
+                    <div className="text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="mt-2 text-sm font-medium text-gray-600">Upload dari Galeri</p>
+                      <p className="mt-1 text-xs text-gray-500">PNG, JPG hingga 10MB</p>
+                    </div>
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                   </label>
                   
                   <button
                     type="button"
-                    onClick={handleCameraCapture}
-                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 inline-flex items-center gap-2"
+                    onClick={startCamera}
+                    className="w-full px-4 py-4 bg-simgreen-500 text-white rounded-lg hover:bg-simgreen-600 transition flex items-center justify-center gap-2 font-semibold text-base"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Gunakan Kamera
+                    Ambil Foto dengan Kamera
                   </button>
                 </div>
-              </>
-            )}
+              )}
+
+              {useCamera && (
+                <div className="space-y-4">
+                  <div className="relative bg-gray-900 rounded-xl overflow-hidden border-2 border-simgreen-500 shadow-lg">
+                    <video 
+                      ref={videoRef} 
+                      autoPlay 
+                      playsInline
+                      muted
+                      className="w-full object-cover rounded-xl"
+                      style={{ height: '400px', width: '100%', display: 'block', backgroundColor: '#000' }}
+                    />
+                  </div>
+                  <canvas ref={canvasRef} className="hidden" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="px-6 py-4 bg-simgreen-500 text-white rounded-lg hover:bg-simgreen-600 transition font-semibold text-lg flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      📸 Ambil Foto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="px-6 py-4 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition font-semibold text-lg shadow-lg"
+                    >
+                      ❌ Batal
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {previewUrl && (
+                <div className="space-y-3">
+                  <div className="relative cursor-pointer group" onClick={() => window.open(previewUrl, '_blank')}>
+                    <img 
+                      src={previewUrl} 
+                      alt="Preview" 
+                      className="w-80 h-80 object-cover mx-auto rounded-lg border-2 border-gray-200 shadow-sm hover:border-simgreen-500 transition" 
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition rounded-lg flex items-center justify-center">
+                      <svg className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(previewUrl, '_blank');
+                      }}
+                      className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Lihat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFoto(null);
+                        setPreviewUrl('');
+                      }}
+                      className="px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Ganti
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Catatan */}
+            <div className="mt-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Catatan (Opsional)
+              </label>
+              <textarea
+                value={catatan}
+                onChange={(e) => setCatatan(e.target.value)}
+                rows={4}
+                placeholder="Tambahkan catatan jika diperlukan..."
+                className="w-full px-4 py-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent resize-none"
+              />
+            </div>
+
+            {/* Button Submit */}
+            <div className="mt-8 flex gap-4">
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="flex-1 px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold text-lg"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex-1 px-8 py-4 bg-gradient-to-r from-simgreen-500 to-simgreen-600 text-white font-semibold rounded-lg hover:from-simgreen-600 hover:to-simgreen-700 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Memproses...
+                  </span>
+                ) : 'Lanjut ke Konfirmasi'}
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <button 
-            onClick={handleSubmit}
-            disabled={loading || !imageFile}
-            className="px-12 py-4 bg-simgreen-600 hover:bg-simgreen-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-lg"
-          >
-            {loading ? 'Memproses...' : 'Setor Sampah'}
-          </button>
         </div>
       </main>
     </div>

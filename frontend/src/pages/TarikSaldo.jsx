@@ -7,6 +7,8 @@ export default function TarikSaldo() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saldoVisible, setSaldoVisible] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(localStorage.getItem('profilePhoto') || '');
   const [formData, setFormData] = useState({
     namaBank: '',
     nomorRekening: '',
@@ -22,36 +24,59 @@ export default function TarikSaldo() {
     { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
   ];
 
-  const saldoTersedia = 1250000;
+  const saldoTersedia = parseFloat(localStorage.getItem('saldoTersedia') || '1250000');
   const minPenarikan = 50000;
-  const maxPenarikan = 1250000;
+  const maxPenarikan = saldoTersedia;
 
   const quickAmounts = [100000, 250000, 500000];
 
-  const riwayatPenarikan = [
-    {
-      id: 1,
-      bank: 'Bank BCA',
-      rekening: '1234567890',
-      tanggal: '10 Nov 2025, 14:35',
-      jumlah: 500000,
-      status: 'Berhasil',
-      statusColor: 'text-green-600',
-      statusBg: 'bg-green-100',
-      icon: '✓'
-    },
-    {
-      id: 2,
-      bank: 'Bank Mandiri',
-      rekening: '0876543210',
-      tanggal: '15 Nov 2025, 10:20',
-      jumlah: 250000,
-      status: 'Diproses',
-      statusColor: 'text-yellow-600',
-      statusBg: 'bg-yellow-100',
-      icon: '⏱'
+  const getRiwayatPenarikan = () => {
+    const riwayatTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
+    const penarikanSaja = riwayatTransaksi
+      .filter(trx => trx.jenis === 'Tarik')
+      .slice(0, 2)
+      .map((trx, index) => ({
+        id: index + 1,
+        bank: trx.bank,
+        rekening: trx.rekening,
+        tanggal: `${trx.tanggal}, ${trx.waktu}`,
+        jumlah: trx.jumlah,
+        status: trx.status,
+        statusColor: trx.status === 'Berhasil' ? 'text-green-600' : trx.status === 'Diproses' ? 'text-yellow-600' : 'text-red-600',
+        statusBg: trx.status === 'Berhasil' ? 'bg-green-100' : trx.status === 'Diproses' ? 'bg-yellow-100' : 'bg-red-100',
+        icon: trx.status === 'Berhasil' ? '✓' : trx.status === 'Diproses' ? '⏱' : '✗'
+      }));
+    
+    if (penarikanSaja.length === 0) {
+      return [
+        {
+          id: 1,
+          bank: 'Bank BCA',
+          rekening: '1234567890',
+          tanggal: '10 Nov 2025, 14:35',
+          jumlah: 500000,
+          status: 'Berhasil',
+          statusColor: 'text-green-600',
+          statusBg: 'bg-green-100',
+          icon: '✓'
+        },
+        {
+          id: 2,
+          bank: 'Bank Mandiri',
+          rekening: '0876543210',
+          tanggal: '15 Nov 2025, 10:20',
+          jumlah: 250000,
+          status: 'Diproses',
+          statusColor: 'text-yellow-600',
+          statusBg: 'bg-yellow-100',
+          icon: '⏱'
+        }
+      ];
     }
-  ];
+    return penarikanSaja;
+  };
+
+  const riwayatPenarikan = getRiwayatPenarikan();
 
   const handleQuickAmount = (amount) => {
     setSelectedAmount(amount);
@@ -87,19 +112,56 @@ export default function TarikSaldo() {
     }
 
     if (confirm(`Apakah Anda yakin ingin menarik saldo Rp ${jumlah.toLocaleString()}?`)) {
-      alert('Permintaan penarikan berhasil dikirim! Akan diproses dalam 1-2 hari kerja.');
-      setFormData({
-        namaBank: '',
-        nomorRekening: '',
-        atasNama: '',
-        jumlahPenarikan: ''
-      });
-      setSelectedAmount(null);
+      setIsLoading(true);
+      
+      // Simpan data penarikan ke localStorage
+      const penarikanData = {
+        id: `TRX-${Date.now()}`,
+        jenis: 'Tarik',
+        bank: formData.namaBank,
+        rekening: formData.nomorRekening,
+        atasNama: formData.atasNama,
+        jumlah: jumlah,
+        tanggal: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
+        waktu: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        status: 'Diproses',
+        timestamp: Date.now()
+      };
+      
+      // Simpan ke latestPenarikanActivity untuk dashboard
+      localStorage.setItem('latestPenarikanActivity', JSON.stringify(penarikanData));
+      
+      // Simpan ke riwayat transaksi
+      const existingTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
+      existingTransaksi.unshift(penarikanData);
+      localStorage.setItem('riwayatTransaksi', JSON.stringify(existingTransaksi));
+      
+      // TAMBAH saldo karena uang masuk ke rekening pengguna (bukan kurangi)
+      const currentSaldo = parseFloat(localStorage.getItem('saldoTersedia') || saldoTersedia);
+      const newSaldo = currentSaldo + jumlah; // DITAMBAH bukan dikurangi
+      localStorage.setItem('saldoTersedia', newSaldo.toString());
+      
+      // Redirect ke halaman berhasil dengan loading
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/penarikan-berhasil', { state: { penarikanData } });
+      }, 2000);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-lg font-semibold text-gray-800">Memproses penarikan...</p>
+            <p className="text-sm text-gray-500">Mohon tunggu sebentar</p>
+          </div>
+        </div>
+      )}
+      
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
       <main className="flex-1 px-8 pt-8 pb-20 overflow-y-auto max-h-screen">
@@ -176,9 +238,17 @@ export default function TarikSaldo() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
-                A
-              </div>
+              {profilePhoto ? (
+                <img 
+                  src={profilePhoto} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full object-cover border-2 border-simgreen-500"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
+                  A
+                </div>
+              )}
               <div>
                 <div className="text-sm font-semibold text-gray-800">Ahmad Rizki</div>
                 <div className="text-xs text-gray-500">Nasabah</div>

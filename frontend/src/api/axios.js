@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+const BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 const api = axios.create({
   baseURL: BASE + '/api',
@@ -42,21 +42,22 @@ export const loginDirect = async (email, password) => {
   try {
     console.log('🔵 loginDirect called with:', { email });
     
-    // Path Apache: /web framework/backend/api/login.php (spasi di-encode)
-    const url = 'http://localhost:8081/web%20framework/backend/api/login.php';
+    // Path Apache: /api/login.php (pakai Alias tanpa spasi)
+    const url = '/api/login.php';
     console.log('🔵 Request to:', url);
     
-    const response = await axios({
-      method: 'POST',
-      url: url,
-      data: { email, password },
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      withCredentials: true,
-      timeout: 15000
-    });
+    const response = await axios.post(
+      url,
+      { email, password },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true,
+        timeout: 15000
+      }
+    );
     
     console.log('✅ Response received:', response.data);
     return response;

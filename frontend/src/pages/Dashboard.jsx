@@ -10,6 +10,9 @@ export default function Dashboard(){
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [saldoTersedia, setSaldoTersedia] = useState(0);
+  const [pemasukanBulanIni, setPemasukanBulanIni] = useState(0);
+  const [profilePhoto, setProfilePhoto] = useState(localStorage.getItem('profilePhoto') || '');
 
   const notifications = [
     { id: 1, type: 'success', title: 'Setoran Berhasil', message: 'Setoran sampah 2.5 kg telah diterima', time: '5 menit lalu', unread: true },
@@ -18,9 +21,34 @@ export default function Dashboard(){
     { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
   ];
 
+  // Fungsi untuk menghitung pemasukan bulan ini
+  const hitungPemasukanBulanIni = () => {
+    const riwayat = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
+    const bulanIni = new Date().getMonth();
+    const tahunIni = new Date().getFullYear();
+    
+    const totalBulanIni = riwayat
+      .filter(trx => {
+        if (!trx.timestamp) return false;
+        const trxDate = new Date(trx.timestamp);
+        return trxDate.getMonth() === bulanIni && trxDate.getFullYear() === tahunIni;
+      })
+      .reduce((total, trx) => total + (trx.jumlah || 0), 0);
+    
+    return totalBulanIni;
+  };
+
   useEffect(()=>{
     api.get('/user').then(r=>setUser(r.data)).catch(()=>{});
     api.get('/summary').then(r=>setSummary(r.data)).catch(()=>{});
+    
+    // Update saldo dan pemasukan bulan ini
+    const saldo = parseFloat(localStorage.getItem('saldoTersedia') || '800000');
+    setSaldoTersedia(saldo);
+    setPemasukanBulanIni(hitungPemasukanBulanIni());
+    
+    // Update profile photo
+    setProfilePhoto(localStorage.getItem('profilePhoto') || '');
   },[]);
 
   const barData = {
@@ -151,9 +179,17 @@ export default function Dashboard(){
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
-                {user?.name?.charAt(0) || 'A'}
-              </div>
+              {profilePhoto ? (
+                <img 
+                  src={profilePhoto} 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full object-cover border-2 border-simgreen-500"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-simgreen-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {user?.name?.charAt(0) || 'A'}
+                </div>
+              )}
               <div>
                 <div className="text-sm font-semibold text-gray-800">{user?.name || 'Ahmad Rizki'}</div>
                 <div className="text-xs text-gray-500">Nasabah</div>
@@ -177,9 +213,11 @@ export default function Dashboard(){
             <div>
               <p className="text-sm text-gray-500 mb-1">Saldo Saat Ini</p>
               <h3 className="text-4xl font-bold text-gray-800">
-                Rp {Number(summary?.totalAmount || 1250000).toLocaleString('id-ID')}
+                Rp {saldoTersedia.toLocaleString('id-ID')}
               </h3>
-              <p className="text-sm text-simgreen-600 mt-2">+Rp 75.000 Bulan Ini</p>
+              <p className="text-sm text-simgreen-600 mt-2">
+                +Rp {pemasukanBulanIni.toLocaleString('id-ID')} Bulan Ini
+              </p>
             </div>
             <div className="w-16 h-16 bg-simgreen-100 rounded-2xl flex items-center justify-center">
               <svg className="w-8 h-8 text-simgreen-600" fill="currentColor" viewBox="0 0 20 20">
@@ -264,12 +302,78 @@ export default function Dashboard(){
         <div className="bg-white rounded-2xl shadow-md p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-800">Aktivitas Terbaru</h3>
-            <a href="#" className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
+            <a href="/riwayat-transaksi" className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
               Lihat Semua
             </a>
           </div>
           
           <div className="space-y-3">
+            {/* Latest Penarikan Activity */}
+            {(() => {
+              const latestPenarikan = localStorage.getItem('latestPenarikanActivity');
+              if (latestPenarikan) {
+                const activity = JSON.parse(latestPenarikan);
+                return (
+                  <div className="flex items-center justify-between p-4 border-2 border-green-200 bg-green-50 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center animate-pulse">
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-800 flex items-center gap-2">
+                          Penarikan Saldo
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
+                            {activity.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600">{activity.bank} • {activity.tanggal}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">+Rp {activity.jumlah.toLocaleString('id-ID')}</div>
+                      <div className="text-xs text-gray-500">Ke Rekening</div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Latest Setoran Activity */}
+            {(() => {
+              const latestActivity = localStorage.getItem('latestSetoranActivity');
+              if (latestActivity) {
+                const activity = JSON.parse(latestActivity);
+                return (
+                  <div className="flex items-center justify-between p-4 border-2 border-green-200 bg-green-50 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center animate-pulse">
+                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-800 flex items-center gap-2">
+                          Setor Sampah Anorganik
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium">
+                            Verifikasi
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600 capitalize">{activity.jenis} • {activity.time}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">+Rp {activity.total.toLocaleString('id-ID')}</div>
+                      <div className="text-xs text-gray-500">{activity.berat} kg</div>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             {/* Transaction 1 */}
             <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
               <div className="flex items-center gap-4">

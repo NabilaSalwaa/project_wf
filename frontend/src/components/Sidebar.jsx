@@ -27,7 +27,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }){
       )}
 
       {/* Sidebar */}
-      <aside className={`w-64 bg-white h-screen shadow-lg flex flex-col fixed md:static top-0 left-0 z-40 transform md:transform-none transition-transform duration-300 ${
+      <aside className={`w-64 bg-white min-h-screen shadow-lg flex flex-col fixed md:sticky top-0 left-0 z-40 transform md:transform-none transition-transform duration-300 ${
         open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
       }`}>
       {/* Logo Section */}

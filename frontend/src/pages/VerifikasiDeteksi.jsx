@@ -69,104 +69,6 @@ const sidebarMenu = [
 ];
 
 // Sample verification data
-const initialVerificationData = [
-  {
-    id: 'D-1921',
-    nama: 'Maya Putri',
-    idNasabah: 'ID NSB-2101',
-    foto: 'https://ui-avatars.com/api/?name=Maya+Putri&background=22C55E&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?w=200',
-    jenis: 'Organik',
-    confidence: 92,
-    prediksiAI: 'Organik',
-    tanggal: '2025-01-15',
-    status: 'pending'
-  },
-  {
-    id: 'D-1922',
-    nama: 'Agus Rahman',
-    idNasabah: 'ID NSB-3142',
-    foto: 'https://ui-avatars.com/api/?name=Agus+Rahman&background=3B82F6&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=200',
-    jenis: 'Anorganik',
-    confidence: 87,
-    prediksiAI: 'Anorganik',
-    tanggal: '2025-01-15',
-    status: 'pending'
-  },
-  {
-    id: 'D-1923',
-    nama: 'Sari Dewi',
-    idNasabah: 'ID NSB-2143',
-    foto: 'https://ui-avatars.com/api/?name=Sari+Dewi&background=22C55E&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=200',
-    jenis: 'Organik',
-    confidence: 89,
-    prediksiAI: 'Organik',
-    tanggal: '2025-01-14',
-    status: 'pending'
-  },
-  {
-    id: 'D-1924',
-    nama: 'Budi Santoso',
-    idNasabah: 'ID NSB-1987',
-    foto: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=F59E0B&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=200',
-    jenis: 'Anorganik',
-    confidence: 78,
-    prediksiAI: 'Anorganik',
-    tanggal: '2025-01-14',
-    status: 'pending'
-  },
-  {
-    id: 'D-1925',
-    nama: 'Rina Wati',
-    idNasabah: 'ID NSB-2456',
-    foto: 'https://ui-avatars.com/api/?name=Rina+Wati&background=8B5CF6&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1583506897697-38a17eb8a53e?w=200',
-    jenis: 'Organik',
-    confidence: 95,
-    prediksiAI: 'Organik',
-    tanggal: '2025-01-13',
-    status: 'pending'
-  },
-  {
-    id: 'D-1926',
-    nama: 'Ahmad Fauzi',
-    idNasabah: 'ID NSB-3001',
-    foto: 'https://ui-avatars.com/api/?name=Ahmad+Fauzi&background=EF4444&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1567225477277-c5e8a42e5326?w=200',
-    jenis: 'Anorganik',
-    confidence: 84,
-    prediksiAI: 'Anorganik',
-    tanggal: '2025-01-13',
-    status: 'pending'
-  },
-  {
-    id: 'D-1927',
-    nama: 'Siti Aminah',
-    idNasabah: 'ID NSB-1765',
-    foto: 'https://ui-avatars.com/api/?name=Siti+Aminah&background=06B6D4&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1528323273322-d81458248d40?w=200',
-    jenis: 'Organik',
-    confidence: 91,
-    prediksiAI: 'Organik',
-    tanggal: '2025-01-12',
-    status: 'pending'
-  },
-  {
-    id: 'D-1928',
-    nama: 'Dedi Kurniawan',
-    idNasabah: 'ID NSB-2789',
-    foto: 'https://ui-avatars.com/api/?name=Dedi+Kurniawan&background=10B981&color=fff',
-    fotoSampah: 'https://images.unsplash.com/photo-1569098644584-210bcd375b59?w=200',
-    jenis: 'Anorganik',
-    confidence: 88,
-    prediksiAI: 'Anorganik',
-    tanggal: '2025-01-12',
-    status: 'pending'
-  }
-];
 
 export default function VerifikasiDeteksi() {
   const navigate = useNavigate();
@@ -174,9 +76,31 @@ export default function VerifikasiDeteksi() {
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua Jenis');
   const [confidenceFilter, setConfidenceFilter] = useState('Semua Confidence');
-  const [verificationData, setVerificationData] = useState(initialVerificationData);
+  const [verificationData, setVerificationData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/setor-sampah.php?status=pending', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setVerificationData(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter data based on search and filters
   const filteredData = verificationData.filter(item => {
@@ -333,15 +257,21 @@ export default function VerifikasiDeteksi() {
             </div>
             <div className="flex items-center gap-4">
               {/* Notification Icon */}
-              <button className="relative p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                
-                {/* Mail Icon */}
-              <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+              <button
+                className="relative p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => navigate('/admin/notifications')}
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+
+              {/* Mail Icon */}
+              <button
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => navigate('/admin/messages')}
+              >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>

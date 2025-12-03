@@ -19,10 +19,15 @@ import SetorSampah from './pages/SetorSampah';
 import KonfirmasiSetoran from './pages/KonfirmasiSetoran';
 import SetoranBerhasil from './pages/SetoranBerhasil';
 import TarikSaldo from './pages/TarikSaldo';
+import PenarikanBerhasil from './pages/PenarikanBerhasil';
 import RiwayatTransaksi from './pages/RiwayatTransaksi';
 import ProfilPengguna from './pages/ProfilPengguna';
 import RegisterForm from './pages/RegisterForm';
 import TestPage from './pages/TestPage';
+
+import AdminNotifications from './pages/AdminNotifications';
+import AdminMessages from './pages/AdminMessages';
+import DaftarSetoran from './pages/admin/DaftarSetoran';
 
 function Protected({ children }) {
   const token = localStorage.getItem('token');
@@ -47,6 +52,9 @@ export default function App() {
       <Route path="/admin/transaksi" element={<Transaksi />} />
       <Route path="/admin/laporan" element={<Laporan />} />
       <Route path="/admin/pengaturan" element={<Pengaturan />} />
+      <Route path="/admin/notifications" element={<AdminNotifications />} />
+      <Route path="/admin/messages" element={<AdminMessages />} />
+      <Route path="/admin/daftar-setoran" element={<DaftarSetoran />} />
       <Route
         path="/dashboard"
         element={
@@ -84,6 +92,14 @@ export default function App() {
         element={
           <Protected>
             <TarikSaldo />
+          </Protected>
+        }
+      />
+      <Route
+        path="/penarikan-berhasil"
+        element={
+          <Protected>
+            <PenarikanBerhasil />
           </Protected>
         }
       />

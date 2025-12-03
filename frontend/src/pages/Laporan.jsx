@@ -159,7 +159,7 @@ export default function Laporan() {
     datasets: [{
       label: 'Total Penarikan',
       data: [450, 380, 520, 290, 610, 340, 480, 550, 420, 390, 680, 520],
-      backgroundColor: 'transparent',
+      // backgroundColor: 'transparent',
       borderColor: 'rgba(239, 68, 68, 1)',
       borderWidth: 3,
       tension: 0.4,

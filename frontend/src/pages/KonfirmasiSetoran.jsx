@@ -1,86 +1,134 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import axios from 'axios';
 
 export default function KonfirmasiSetoran() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(false);
+  const [setoranData, setSetoranData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
   const notifications = [
     { id: 1, type: 'success', title: 'Setoran Berhasil', message: 'Setoran sampah 2.5 kg telah diterima', time: '5 menit lalu', unread: true },
     { id: 2, type: 'info', title: 'Poin Ditambahkan', message: 'Anda mendapat 125 poin dari setoran terakhir', time: '1 jam lalu', unread: true },
-    { id: 3, type: 'warning', title: 'Penarikan Diproses', message: 'Penarikan saldo Rp 150.000 sedang diproses', time: '3 jam lalu', unread: false },
-    { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
   ];
 
-  // Data dummy setoran (nanti bisa dari API/props)
-  const setoranData = [
-    {
-      id: 1,
-      icon: '🍾',
-      iconBg: 'bg-blue-100',
-      jenis: 'Setor Sampah Anorganik',
-      kategori: 'Botol Plastik',
-      berat: 2.5,
-      hargaPerKg: 3000,
-      total: 7500
-    },
-    {
-      id: 2,
-      icon: '📦',
-      iconBg: 'bg-yellow-100',
-      jenis: 'Setor Sampah Anorganik',
-      kategori: 'Karton Bekas',
-      berat: 1.8,
-      hargaPerKg: 2500,
-      total: 4500
-    },
-    {
-      id: 3,
-      icon: '🗑️',
-      iconBg: 'bg-gray-100',
-      jenis: 'Setor Sampah Anorganik',
-      kategori: 'Kaleng Minuman',
-      berat: 0.9,
-      hargaPerKg: 8000,
-      total: 6400
-    },
-    {
-      id: 4,
-      icon: '🌿',
-      iconBg: 'bg-green-100',
-      jenis: 'Setor Sampah Organik',
-      kategori: 'Sisa Sayuran',
-      berat: 1.2,
-      hargaPerKg: 1900,
-      total: 1800
-    }
-  ];
-
-  const totalBerat = setoranData.reduce((sum, item) => sum + item.berat, 0);
-  const totalHarga = setoranData.reduce((sum, item) => sum + item.total, 0);
-
-  const handleKirimSetoran = () => {
-    // Simulasi proses kirim ke server
-    const confirmed = confirm('Apakah Anda yakin ingin mengirim setoran ini?');
-    if (confirmed) {
-      // Redirect ke halaman sukses
-      navigate('/setoran-berhasil');
-    }
-  };
-
-  const handleBatalkan = () => {
-    if (confirm('Yakin ingin membatalkan setoran ini?')) {
+  useEffect(() => {
+    // Load data dari location state
+    const data = location.state?.setoranData;
+    if (!data) {
       navigate('/setor-sampah');
+      return;
+    }
+    setSetoranData(data);
+  }, [navigate, location]);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    
+    try {
+      // Simulasi proses pengiriman selama 2 detik
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Navigasi ke halaman setoran berhasil
+      navigate('/setoran-berhasil', { state: { setoranData } });
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Terjadi kesalahan: ' + error.message);
+      setLoading(false);
     }
   };
+
+  const handleBack = () => {
+    navigate('/setor-sampah');
+  };
+
+  if (!setoranData) {
+    return <div>Loading...</div>;
+  }
+
+  const jenisLabel = {
+    'plastik': 'Botol Plastik',
+    'kertas': 'Kertas Bekas',
+    'logam': 'Kaleng Minuman',
+    'kaca': 'Kaca',
+    'kardus': 'Kardus Bekas',
+    'botol-plastik': 'Botol Plastik',
+    'kaleng': 'Kaleng',
+    'elektronik': 'Barang Elektronik'
+  };
+
+  // Mapping icon berdasarkan jenis sampah
+  const getIcon = (jenis) => {
+    const iconMap = {
+      'plastik': '🍾',
+      'kertas': '📄',
+      'logam': '🗑️',
+      'kaca': '🥛',
+      'kardus': '📦',
+      'botol-plastik': '🍾',
+      'kaleng': '🥫',
+      'elektronik': '📱'
+    };
+    return iconMap[jenis] || '♻️';
+  };
+
+  // Mapping background color
+  const getIconBg = (jenis) => {
+    const bgMap = {
+      'plastik': 'bg-blue-100',
+      'kertas': 'bg-yellow-100',
+      'logam': 'bg-gray-100',
+      'kaca': 'bg-purple-100',
+      'kardus': 'bg-orange-100',
+      'botol-plastik': 'bg-blue-100',
+      'kaleng': 'bg-gray-100',
+      'elektronik': 'bg-red-100'
+    };
+    return bgMap[jenis] || 'bg-green-100';
+  };
+
+  // Semua jenis sampah adalah anorganik
+  const kategori = 'Anorganik';
+
+  // Buat array untuk tampilan tabel
+  const setoranItems = [{
+    id: 1,
+    icon: getIcon(setoranData.jenis_sampah),
+    iconBg: getIconBg(setoranData.jenis_sampah),
+    jenis: 'Setor Sampah ' + kategori,
+    kategori: jenisLabel[setoranData.jenis_sampah] || setoranData.jenis_sampah,
+    berat: setoranData.berat,
+    hargaPerKg: setoranData.harga_per_kg,
+    total: setoranData.total_harga
+  }];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <>
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-12 flex flex-col items-center shadow-2xl">
+            <div className="relative">
+              <svg className="animate-spin h-20 w-20 text-simgreen-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+            <p className="mt-6 text-xl font-bold text-gray-800">Mengirim Setoran...</p>
+            <p className="mt-2 text-gray-600">Mohon tunggu sebentar</p>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen bg-gray-50 flex">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
-      <main className="flex-1 px-8 pt-8 pb-8 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 px-8 pt-8 pb-8">
         {/* Mobile Menu Button */}
         <button 
           onClick={() => setSidebarOpen(true)}
@@ -112,7 +160,6 @@ export default function KonfirmasiSetoran() {
                 )}
               </button>
 
-              {/* Dropdown */}
               {notifOpen && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
                   <div className="p-4 border-b border-gray-200">
@@ -131,9 +178,7 @@ export default function KonfirmasiSetoran() {
                       >
                         <div className="flex gap-3">
                           <div className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${
-                            notif.type === 'success' ? 'bg-green-500' :
-                            notif.type === 'warning' ? 'bg-yellow-500' :
-                            'bg-blue-500'
+                            notif.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
                           }`}></div>
                           <div className="flex-1">
                             <h4 className="font-semibold text-sm text-gray-800">{notif.title}</h4>
@@ -143,11 +188,6 @@ export default function KonfirmasiSetoran() {
                         </div>
                       </div>
                     ))}
-                  </div>
-                  <div className="p-3 text-center border-t border-gray-200">
-                    <button className="text-sm text-simgreen-600 hover:text-simgreen-700 font-medium">
-                      Lihat Semua Notifikasi
-                    </button>
                   </div>
                 </div>
               )}
@@ -168,49 +208,63 @@ export default function KonfirmasiSetoran() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-4xl">
+        <div className="max-w-7xl mx-auto">
           {/* Ringkasan Setoran Card */}
-          <div className="bg-gradient-to-r from-simgreen-600 to-simgreen-500 rounded-xl p-6 mb-6 text-white">
-            <h2 className="text-xl font-bold mb-2">Ringkasan Setoran</h2>
-            <p className="text-white/90 text-sm">Hasil deteksi sampah otomatis</p>
+          <div className="bg-gradient-to-r from-simgreen-600 to-simgreen-500 rounded-2xl p-8 mb-8 text-white">
+            <h2 className="text-3xl font-bold mb-3">Ringkasan Setoran</h2>
+            <p className="text-white/90 text-base">Hasil deteksi sampah otomatis</p>
           </div>
 
+          {/* Foto Preview Section */}
+          {setoranData.previewUrl && (
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Foto Sampah</h3>
+              <div className="flex justify-center">
+                <img 
+                  src={setoranData.previewUrl} 
+                  alt="Foto Sampah" 
+                  className="max-w-md w-full h-auto rounded-xl border-4 border-gray-200 shadow-lg"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Table */}
-          <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-gray-50 border-b-2">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Jenis Sampah</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Berat (kg)</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Harga per Kg</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-700">Total Harga</th>
+                    <th className="px-8 py-5 text-left text-base font-bold text-gray-800">Jenis Sampah</th>
+                    <th className="px-8 py-5 text-center text-base font-bold text-gray-800">Berat (kg)</th>
+                    <th className="px-8 py-5 text-center text-base font-bold text-gray-800">Harga per Kg</th>
+                    <th className="px-8 py-5 text-right text-base font-bold text-gray-800">Total Harga</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {setoranData.map((item) => (
+                  {setoranItems.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 ${item.iconBg} rounded-lg flex items-center justify-center text-xl`}>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-14 h-14 ${item.iconBg} rounded-xl flex items-center justify-center text-3xl`}>
                             {item.icon}
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-800">{item.jenis}</div>
-                            <div className="text-sm text-gray-500">{item.kategori}</div>
+                            <div className="font-bold text-lg text-gray-800">{item.jenis}</div>
+                            <div className="text-base text-gray-600">{item.kategori}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                      <td className="px-8 py-6 text-center">
+                        <span className="px-5 py-2 bg-yellow-100 text-yellow-800 rounded-full text-base font-bold">
                           {item.berat} kg
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center text-gray-700">
-                        Rp {item.hargaPerKg.toLocaleString()}
+                      <td className="px-8 py-6 text-center text-lg font-semibold text-gray-700">
+                        Rp {parseFloat(item.hargaPerKg).toLocaleString('id-ID')}
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-simgreen-600">
-                        Rp {item.total.toLocaleString()}
+                      <td className="px-8 py-6 text-right font-bold text-xl text-simgreen-600">
+                        Rp {parseFloat(item.total).toLocaleString('id-ID')}
                       </td>
                     </tr>
                   ))}
@@ -220,40 +274,54 @@ export default function KonfirmasiSetoran() {
           </div>
 
           {/* Total Section */}
-          <div className="bg-green-50 border-2 border-simgreen-200 rounded-xl p-6 mb-6">
+          <div className="bg-green-50 border-4 border-simgreen-300 rounded-2xl p-10 mb-8 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-gray-700 font-medium mb-1">Total Setoran</div>
-                <div className="text-sm text-gray-600">Total berat: {totalBerat.toFixed(1)} kg</div>
+                <div className="text-gray-800 font-bold text-xl mb-2">Total Setoran</div>
+                <div className="text-base text-gray-700 font-medium">Total berat: {setoranData.berat} kg</div>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold text-simgreen-600">
-                  Rp {totalHarga.toLocaleString()}
+                <div className="text-5xl font-bold text-simgreen-600">
+                  Rp {setoranData.total_harga.toLocaleString('id-ID')}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Akan ditambahkan ke saldo</div>
+                <div className="text-base text-gray-600 mt-2 font-medium">Akan ditambahkan ke saldo</div>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex gap-6">
             <button
-              onClick={handleBatalkan}
-              className="flex-1 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              onClick={handleBack}
+              disabled={loading}
+              className="flex-1 px-10 py-5 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl transition shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               Batalkan
             </button>
             <button
-              onClick={handleKirimSetoran}
-              className="flex-1 px-6 py-3 bg-simgreen-600 hover:bg-simgreen-700 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 px-10 py-5 bg-simgreen-600 hover:bg-simgreen-700 text-white font-bold rounded-xl transition shadow-lg hover:shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 text-lg"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-              </svg>
-              Kirim Setoran
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Kirim Setoran
+                </>
+              )}
             </button>
           </div>
 
@@ -263,11 +331,13 @@ export default function KonfirmasiSetoran() {
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <div className="text-sm text-blue-800">
-              <span className="font-semibold">Informasi Penting:</span> Setelah dikirimkan, saldo akan otomatis ditambahkan ke akun Anda dalam 1-2 menit. Pastikan semua data sudah benar sebelum mengirim.
+              <span className="font-semibold">Informasi Penting:</span> Setelah dikirimkan, setoran akan diverifikasi oleh admin dalam waktu 1-2 hari kerja. Saldo akan otomatis ditambahkan setelah disetujui.
             </div>
           </div>
         </div>
+        </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
