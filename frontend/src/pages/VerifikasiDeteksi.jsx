@@ -9,7 +9,7 @@ const sidebarMenu = [
         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
       </svg>
     ),
-    path: '/admin/dashboard'
+    path: '/dashboard-admin'
   },
   {
     label: 'Data Nasabah',
@@ -69,6 +69,44 @@ const sidebarMenu = [
 ];
 
 // Sample verification data
+const mockVerificationData = [
+  {
+    id: 'VER001',
+    idNasabah: 'NSB001',
+    nama: 'Ahmad Rizki',
+    tanggal: '2025-12-07',
+    waktu: '10:30',
+    jenis: 'Plastik',
+    berat: 2.5,
+    confidence: 95,
+    status: 'pending',
+    image: 'https://via.placeholder.com/300x200/22C55E/ffffff?text=Plastik'
+  },
+  {
+    id: 'VER002',
+    idNasabah: 'NSB002',
+    nama: 'Siti Nurhaliza',
+    tanggal: '2025-12-07',
+    waktu: '11:15',
+    jenis: 'Kertas',
+    berat: 1.8,
+    confidence: 88,
+    status: 'pending',
+    image: 'https://via.placeholder.com/300x200/3B82F6/ffffff?text=Kertas'
+  },
+  {
+    id: 'VER003',
+    idNasabah: 'NSB003',
+    nama: 'Budi Santoso',
+    tanggal: '2025-12-07',
+    waktu: '14:20',
+    jenis: 'Logam',
+    berat: 3.2,
+    confidence: 75,
+    status: 'pending',
+    image: 'https://via.placeholder.com/300x200/EF4444/ffffff?text=Logam'
+  }
+];
 
 export default function VerifikasiDeteksi() {
   const navigate = useNavigate();
@@ -76,29 +114,40 @@ export default function VerifikasiDeteksi() {
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua Jenis');
   const [confidenceFilter, setConfidenceFilter] = useState('Semua Confidence');
-  const [verificationData, setVerificationData] = useState([]);
+  const [verificationData, setVerificationData] = useState(mockVerificationData);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/setor-sampah.php?status=pending', {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        if (!token) {
+          console.log('No token found, using mock data');
+          return;
+        }
+        
+        const res = await fetch('http://127.0.0.1:8000/api/setor-sampah?status=pending', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
           }
         });
+        
         if (res.ok) {
           const data = await res.json();
           setVerificationData(data.data || []);
+        } else {
+          console.log('API response not OK, using empty data');
         }
       } catch (err) {
         console.error('Error fetching data:', err);
+        // Don't crash, just use empty data
       }
     };
+    
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchData, 30000); // Check every 30 seconds instead of 5
     return () => clearInterval(interval);
   }, []);
 

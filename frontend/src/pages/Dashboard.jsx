@@ -39,17 +39,56 @@ export default function Dashboard(){
   };
 
   useEffect(()=>{
-    api.get('/user').then(r=>setUser(r.data)).catch(()=>{});
-    api.get('/summary').then(r=>setSummary(r.data)).catch(()=>{});
-    
-    // Update saldo dan pemasukan bulan ini
-    const saldo = parseFloat(localStorage.getItem('saldoTersedia') || '800000');
-    setSaldoTersedia(saldo);
+    fetchUserData();
+    fetchSummary();
     setPemasukanBulanIni(hitungPemasukanBulanIni());
-    
-    // Update profile photo
     setProfilePhoto(localStorage.getItem('profilePhoto') || '');
+    
+    // Auto-refresh saldo setiap 3 detik
+    const intervalId = setInterval(() => {
+      fetchUserData();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
   },[]);
+
+  const fetchSummary = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      if (userEmail) {
+        const response = await api.get(`/summary?email=${userEmail}`);
+        setSummary(response.data);
+      }
+    } catch (error) {
+      console.log('Error fetching summary:', error);
+    }
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const response = await api.get('/user');
+      setUser(response.data);
+      
+      // Fetch saldo terbaru dari database
+      const usersResponse = await api.get('http://127.0.0.1:8000/api/users/all', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      if (usersResponse.data.success && response.data.email) {
+        const userData = usersResponse.data.users.find(u => u.email === response.data.email);
+        if (userData) {
+          const newSaldo = parseFloat(userData.saldo) || 0;
+          setSaldoTersedia(newSaldo);
+          localStorage.setItem('saldoTersedia', newSaldo.toString());
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      // Fallback ke localStorage
+      const saldo = parseFloat(localStorage.getItem('saldoTersedia') || '1000000');
+      setSaldoTersedia(saldo);
+    }
+  };
 
   const barData = {
     labels: summary?.byCategory?.map(c=>c.category) ?? ['Organik','Anorganik'],
@@ -314,11 +353,11 @@ export default function Dashboard(){
               if (latestPenarikan) {
                 const activity = JSON.parse(latestPenarikan);
                 return (
-                  <div className="flex items-center justify-between p-4 border-2 border-green-200 bg-green-50 rounded-xl">
+                  <div className="flex items-center justify-between p-4 border-2 border-red-200 bg-red-50 rounded-xl">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center animate-pulse">
-                        <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center animate-pulse">
+                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div>
@@ -332,7 +371,7 @@ export default function Dashboard(){
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-green-600">+Rp {activity.jumlah.toLocaleString('id-ID')}</div>
+                      <div className="font-bold text-red-600">-Rp {activity.jumlah.toLocaleString('id-ID')}</div>
                       <div className="text-xs text-gray-500">Ke Rekening</div>
                     </div>
                   </div>
@@ -393,12 +432,12 @@ export default function Dashboard(){
               </div>
             </div>
 
-            {/* Transaction 2 */}
+            {/* Transaction 2 - Penarikan */}
             <div className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-8a3 3 0 11-6 0 3 3 0 016 0z" clipRule="evenodd" />
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" transform="rotate(180 10 10)" />
                   </svg>
                 </div>
                 <div>

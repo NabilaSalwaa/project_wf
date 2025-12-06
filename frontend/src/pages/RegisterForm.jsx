@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function RegisterForm() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     namaLengkap: '',
-    nik: '',
+    nim_nip: '', // NIM untuk mahasiswa atau NIP untuk dosen/staff
     email: '',
     noTelepon: '',
-    alamat: '',
-    kelurahan: '',
-    kecamatan: '',
-    kabupaten: 'Tangerang',
-    provinsi: 'Banten',
-    kodePos: '',
+    fakultas: '',
+    prodi_unit: '', // Program Studi untuk mahasiswa atau Unit Kerja untuk dosen/staff
     jenisKelamin: '',
-    tanggalLahir: '',
-    pekerjaan: '',
+    statusCivitas: '', // Mahasiswa, Dosen, atau Staff
+    angkatan: '', // Untuk mahasiswa
     password: '',
     konfirmasiPassword: ''
   });
@@ -46,16 +43,68 @@ export default function RegisterForm() {
 
     setLoading(true);
 
-    // Simulasi submit (nanti bisa diganti dengan API call)
-    setTimeout(() => {
-      alert('Pendaftaran berhasil! Akun Anda akan diverifikasi oleh admin dalam 1x24 jam.');
+    try {
+      // Kirim data registrasi ke backend
+      const response = await axios.post('http://127.0.0.1:8000/api/register', {
+        name: formData.namaLengkap,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.konfirmasiPassword,
+        nim_nip: formData.nim_nip,
+        phone: formData.noTelepon,
+        fakultas: formData.fakultas,
+        prodi_unit: formData.prodi_unit,
+        jenis_kelamin: formData.jenisKelamin,
+        status_civitas: formData.statusCivitas,
+        angkatan: formData.angkatan
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.data.user && response.data.token) {
+        // Simpan token dan user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Redirect ke halaman sukses dengan data user setelah loading 3 detik (untuk screenshot)
+        setTimeout(() => {
+          navigate('/registrasi-sukses', { 
+            state: { 
+              userData: response.data.user 
+            },
+            replace: true
+          });
+        }, 3000); // 3 detik delay untuk screenshot
+      } else {
+        alert('Pendaftaran gagal, silakan coba lagi.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error registrasi:', error);
+      const message = error.response?.data?.message || 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
+      alert(message);
       setLoading(false);
-      navigate('/');
-    }, 1500);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-100 to-green-200 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-100 to-green-200 py-12 px-4 relative">
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-sm mx-4">
+            <div className="w-16 h-16 border-4 border-simgreen-200 border-t-simgreen-600 rounded-full animate-spin"></div>
+            <h3 className="text-xl font-bold text-gray-800">Memproses Pendaftaran...</h3>
+            <p className="text-gray-600 text-center text-sm">
+              Mohon tunggu, kami sedang mendaftarkan akun Anda
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
@@ -72,7 +121,7 @@ export default function RegisterForm() {
                 <div className="text-sm opacity-90">Bank Sampah Digital</div>
               </div>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Formulir Pendaftaran Nasabah</h1>
+            <h1 className="text-3xl font-bold mb-2">Formulir Pendaftaran Civitas Akademika</h1>
             <p className="text-white/90">Lengkapi data diri Anda untuk bergabung dengan BANGKIT</p>
           </div>
         </div>
@@ -103,15 +152,32 @@ export default function RegisterForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    NIK (Nomor Induk Kependudukan) <span className="text-red-500">*</span>
+                    Status Civitas <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="statusCivitas"
+                    value={formData.statusCivitas}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
+                    required
+                  >
+                    <option value="">Pilih status</option>
+                    <option value="Mahasiswa">Mahasiswa</option>
+                    <option value="Dosen">Dosen</option>
+                    <option value="Staff">Staff/Karyawan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {formData.statusCivitas === 'Mahasiswa' ? 'NIM' : 'NIP'} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="nik"
-                    value={formData.nik}
+                    name="nim_nip"
+                    value={formData.nim_nip}
                     onChange={handleChange}
-                    placeholder="16 digit NIK"
-                    maxLength="16"
+                    placeholder={formData.statusCivitas === 'Mahasiswa' ? 'Nomor Induk Mahasiswa' : 'Nomor Induk Pegawai'}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
                     required
                   />
@@ -119,14 +185,14 @@ export default function RegisterForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span className="text-red-500">*</span>
+                    Email Kampus <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="contoh@email.com"
+                    placeholder="contoh@kampus.ac.id"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
                     required
                   />
@@ -134,7 +200,7 @@ export default function RegisterForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    No. Telepon/WhatsApp <span className="text-red-500">*</span>
+                    No. WhatsApp <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -163,132 +229,72 @@ export default function RegisterForm() {
                     <option value="Perempuan">Perempuan</option>
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tanggal Lahir <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="tanggalLahir"
-                    value={formData.tanggalLahir}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
-                    required
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pekerjaan <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="pekerjaan"
-                    value={formData.pekerjaan}
-                    onChange={handleChange}
-                    placeholder="Masukkan pekerjaan"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
-                    required
-                  />
-                </div>
               </div>
             </div>
 
-            {/* Alamat */}
+            {/* Data Akademik */}
             <div>
               <h2 className="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-simgreen-500">
-                Alamat Lengkap
+                Data Akademik
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alamat Jalan <span className="text-red-500">*</span>
+                    Fakultas <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    name="alamat"
-                    value={formData.alamat}
+                  <select
+                    name="fakultas"
+                    value={formData.fakultas}
                     onChange={handleChange}
-                    placeholder="Jalan, RT/RW, Nomor Rumah"
-                    rows="3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
+                    required
+                  >
+                    <option value="">Pilih fakultas</option>
+                    <option value="Teknik">Fakultas Teknik</option>
+                    <option value="Ekonomi dan Bisnis">Fakultas Ekonomi dan Bisnis</option>
+                    <option value="MIPA">Fakultas MIPA</option>
+                    <option value="Ilmu Sosial dan Politik">Fakultas Ilmu Sosial dan Politik</option>
+                    <option value="Hukum">Fakultas Hukum</option>
+                    <option value="Kedokteran">Fakultas Kedokteran</option>
+                    <option value="Pertanian">Fakultas Pertanian</option>
+                    <option value="Keguruan dan Ilmu Pendidikan">Fakultas Keguruan dan Ilmu Pendidikan</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {formData.statusCivitas === 'Mahasiswa' ? 'Program Studi' : 'Unit Kerja'} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="prodi_unit"
+                    value={formData.prodi_unit}
+                    onChange={handleChange}
+                    placeholder={formData.statusCivitas === 'Mahasiswa' ? 'Contoh: Teknik Informatika' : 'Contoh: Bagian Akademik'}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kelurahan/Desa <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="kelurahan"
-                    value={formData.kelurahan}
-                    onChange={handleChange}
-                    placeholder="Nama kelurahan"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kecamatan <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="kecamatan"
-                    value={formData.kecamatan}
-                    onChange={handleChange}
-                    placeholder="Nama kecamatan"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kabupaten/Kota <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="kabupaten"
-                    value={formData.kabupaten}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none bg-gray-50"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Provinsi <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="provinsi"
-                    value={formData.provinsi}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none bg-gray-50"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kode Pos <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="kodePos"
-                    value={formData.kodePos}
-                    onChange={handleChange}
-                    placeholder="15xxx"
-                    maxLength="5"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
-                    required
-                  />
-                </div>
+                {formData.statusCivitas === 'Mahasiswa' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Angkatan <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="angkatan"
+                      value={formData.angkatan}
+                      onChange={handleChange}
+                      placeholder="Contoh: 2024"
+                      min="2000"
+                      max="2030"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-simgreen-500 focus:border-transparent outline-none"
+                      required={formData.statusCivitas === 'Mahasiswa'}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

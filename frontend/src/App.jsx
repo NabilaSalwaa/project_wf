@@ -23,6 +23,7 @@ import PenarikanBerhasil from './pages/PenarikanBerhasil';
 import RiwayatTransaksi from './pages/RiwayatTransaksi';
 import ProfilPengguna from './pages/ProfilPengguna';
 import RegisterForm from './pages/RegisterForm';
+import RegistrasiSukses from './pages/RegistrasiSukses';
 import TestPage from './pages/TestPage';
 
 import AdminNotifications from './pages/AdminNotifications';
@@ -44,6 +45,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/login-admin" element={<LoginAdmin />} />
       <Route path="/register" element={<RegisterForm />} />
+      <Route path="/registrasi-sukses" element={<RegistrasiSukses />} />
+      <Route path="/dashboard-admin" element={<DashboardAdmin />} />
       <Route path="/admin/dashboard" element={<DashboardAdmin />} />
       <Route path="/admin/data-nasabah" element={<DataNasabah />} />
       <Route path="/admin/data-sampah" element={<DataSampah />} />

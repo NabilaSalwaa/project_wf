@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import {
   FiPlus,
   FiEdit2,
@@ -15,7 +16,7 @@ const sidebarMenu = [
         <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
       </svg>
     ),
-    path: '/admin/dashboard'
+    path: '/dashboard-admin'
   },
   {
     label: 'Data Nasabah',
@@ -192,7 +193,10 @@ export default function DataNasabah() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua Status');
   const [sortFilter, setSortFilter] = useState('Urutkan Terbaru');
-  const [nasabahData, setNasabahData] = useState(initialNasabahData);
+  const [nasabahData, setNasabahData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
   const [selectedItems, setSelectedItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -201,7 +205,6 @@ export default function DataNasabah() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [selectedNasabah, setSelectedNasabah] = useState(null);
   
   // Form state for add/edit
@@ -213,6 +216,67 @@ export default function DataNasabah() {
     status: 'Aktif'
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
+  // Fetch data nasabah dari backend
+  useEffect(() => {
+    fetchNasabahData();
+    
+    // Auto-refresh setiap 3 detik untuk real-time update
+    const intervalId = setInterval(() => {
+      fetchNasabahData();
+    }, 3000); // 3 detik
+
+    // Cleanup interval saat component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const fetchNasabahData = async () => {
+    try {
+      // Only show loading spinner on first load
+      if (isFirstLoad) {
+        setLoading(true);
+      }
+      
+      const response = await axios.get('http://127.0.0.1:8000/api/users/all');
+      
+      console.log('🔄 Data Nasabah refresh:', new Date().toLocaleTimeString());
+      
+      if (response.data.success) {
+        // Transform data from backend to match frontend format
+        const transformedData = response.data.users
+          .filter(user => user.role !== 'admin') // Filter out admin users
+          .map((user) => {
+            return {
+              id: `N${String(68000 + user.id).padStart(5, '0')}`,
+              name: user.name,
+              email: user.email,
+              phone: user.phone || '-',
+              saldo: parseFloat(user.saldo) || 0,
+              status: 'Aktif',
+              avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=10B981&color=fff`
+            };
+          });
+        
+        console.log('📊 Total nasabah:', transformedData.length);
+        transformedData.forEach(user => {
+          if (user.email === 'ahmadrizki@gmail.com') {
+            console.log('💰 Saldo Ahmad Rizki:', user.saldo);
+          }
+        });
+        
+        setNasabahData(transformedData);
+        setLastUpdate(new Date()); // Update timestamp
+      }
+    } catch (error) {
+      console.error('❌ Error fetching nasabah data:', error);
+      setNasabahData([]);
+    } finally {
+      if (isFirstLoad) {
+        setLoading(false);
+        setIsFirstLoad(false);
+      }
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -241,29 +305,6 @@ export default function DataNasabah() {
     setTimeout(() => {
       setNotification({ show: false, message: '', type: '' });
     }, 3000);
-  };
-
-  // Handle Add Nasabah
-  const handleAddNasabah = () => {
-    if (!formData.name || !formData.email || !formData.phone) {
-      showNotification('Mohon lengkapi semua data!', 'error');
-      return;
-    }
-
-    const newNasabah = {
-      id: `N${68000 + nasabahData.length + 1}`,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      saldo: formData.saldo,
-      status: formData.status,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=22C55E&color=fff`
-    };
-
-    setNasabahData([newNasabah, ...nasabahData]);
-    setShowAddModal(false);
-    setFormData({ name: '', email: '', phone: '', saldo: 0, status: 'Aktif' });
-    showNotification('Data nasabah berhasil ditambahkan!');
   };
 
   // Handle Edit Nasabah
@@ -479,7 +520,17 @@ export default function DataNasabah() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Kelola Data Nasabah</h1>
-              <p className="text-xs text-gray-500 mt-0.5">Mengelola profil dan informasi nasabah bank sampah</p>
+              <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  </span>
+                  <span className="font-medium text-green-600">Real-time Update</span>
+                </span>
+                <span className="text-gray-400">•</span>
+                <span>Terakhir update: {lastUpdate.toLocaleTimeString('id-ID')}</span>
+              </p>
             </div>
             <div className="flex items-center gap-4">
               {/* Notification Icon */}
@@ -557,11 +608,23 @@ export default function DataNasabah() {
               </select>
 
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={fetchNasabahData}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-sm ml-auto"
+                disabled={loading}
               >
-                <FiPlus className="w-4 h-4" />
-                Tambah Nasabah
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Memuat...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh Data
+                  </>
+                )}
               </button>
 
               {selectedItems.length > 0 && (
@@ -609,7 +672,23 @@ export default function DataNasabah() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
-                  {currentItems.map((nasabah, index) => (
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-12 text-center">
+                        <div className="flex flex-col items-center justify-center">
+                          <div className="w-12 h-12 border-4 border-simgreen-200 border-t-simgreen-600 rounded-full animate-spin mb-3"></div>
+                          <p className="text-gray-500">Memuat data nasabah...</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : currentItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                        Tidak ada data nasabah
+                      </td>
+                    </tr>
+                  ) : (
+                    currentItems.map((nasabah, index) => (
                     <tr 
                       key={nasabah.id} 
                       className="hover:bg-gray-50 transition-all duration-150"
@@ -679,7 +758,8 @@ export default function DataNasabah() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
 
@@ -750,78 +830,6 @@ export default function DataNasabah() {
           </p>
         </footer>
       </div>
-
-      {/* Add Nasabah Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Tambah Nasabah Baru">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              placeholder="Masukkan nama lengkap"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              placeholder="contoh@email.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
-            <input
-              type="text"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              placeholder="+62 812-3456-7890"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Saldo Awal</label>
-            <input
-              type="number"
-              value={formData.saldo}
-              onChange={(e) => setFormData({ ...formData, saldo: parseInt(e.target.value) || 0 })}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white"
-            >
-              <option>Aktif</option>
-              <option>Pending</option>
-              <option>Tidak Aktif</option>
-            </select>
-          </div>
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium"
-            >
-              Batal
-            </button>
-            <button
-              onClick={handleAddNasabah}
-              className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium"
-            >
-              Tambah Nasabah
-            </button>
-          </div>
-        </div>
-      </Modal>
 
       {/* Edit Nasabah Modal */}
       <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Data Nasabah">

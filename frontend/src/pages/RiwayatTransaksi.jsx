@@ -597,14 +597,14 @@ export default function RiwayatTransaksi() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          trx.icon === 'setor' ? 'bg-green-100' : 'bg-green-100'
+                          trx.icon === 'setor' ? 'bg-green-100' : 'bg-red-100'
                         }`}>
                           {trx.icon === 'setor' ? (
                             <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11l5-5m0 0l5 5m-5-5v12" />
                             </svg>
                           ) : (
-                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 13l5 5m0 0l5-5m-5 5V6" />
                             </svg>
                           )}
@@ -617,8 +617,8 @@ export default function RiwayatTransaksi() {
                       <div className="text-xs text-gray-500">{trx.waktu}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className={`text-sm font-bold text-green-600`}>
-                        +Rp {trx.jumlah.toLocaleString()}
+                      <div className={`text-sm font-bold ${trx.icon === 'setor' ? 'text-green-600' : 'text-red-600'}`}>
+                        {trx.icon === 'setor' ? '+' : '-'}Rp {trx.jumlah.toLocaleString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">

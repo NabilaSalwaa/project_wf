@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import axios from 'axios';
+import api from '../api/axios';
 
 export default function KonfirmasiSetoran() {
   const navigate = useNavigate();
@@ -30,14 +31,69 @@ export default function KonfirmasiSetoran() {
     setLoading(true);
     
     try {
-      // Simulasi proses pengiriman selama 2 detik
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('📤 Mengirim setoran ke backend...');
       
-      // Navigasi ke halaman setoran berhasil
-      navigate('/setoran-berhasil', { state: { setoranData } });
+      // Ambil email dari localStorage
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!userEmail) {
+        alert('User tidak ditemukan. Silakan login ulang.');
+        navigate('/login');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('📧 Email user:', userEmail);
+      
+      // Fetch user ID dari database berdasarkan email
+      const usersResponse = await axios.get('http://127.0.0.1:8000/api/users/all');
+      
+      if (!usersResponse.data.success) {
+        alert('Gagal mengambil data user');
+        setLoading(false);
+        return;
+      }
+      
+      const userData = usersResponse.data.users.find(u => u.email === userEmail);
+      
+      if (!userData) {
+        alert('User tidak ditemukan di database. Silakan login ulang.');
+        navigate('/login');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('👤 User ID:', userData.id);
+      
+      // Hit API backend untuk simpan transaksi dan update saldo
+      const response = await axios.post('http://127.0.0.1:8000/api/transactions', {
+        type: 'deposit',
+        category: setoranData.jenis_sampah,
+        weight: parseFloat(setoranData.berat),
+        amount: parseFloat(setoranData.total_harga),
+        user_id: userData.id
+      });
+
+      console.log('✅ Setoran berhasil:', response.data);
+      
+      if (response.data.success) {
+        console.log('💰 Saldo penarikan baru:', response.data.saldo_penarikan);
+        console.log('💵 Saldo dashboard:', response.data.saldo_dashboard);
+        
+        // Navigasi ke halaman setoran berhasil
+        navigate('/setoran-berhasil', { 
+          state: { 
+            setoranData: {
+              ...setoranData,
+              saldo_penarikan: response.data.saldo_penarikan,
+              saldo_dashboard: response.data.saldo_dashboard
+            }
+          } 
+        });
+      }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Terjadi kesalahan: ' + error.message);
+      console.error('❌ Error:', error);
+      alert('Gagal menyimpan setoran: ' + (error.response?.data?.message || error.message));
       setLoading(false);
     }
   };

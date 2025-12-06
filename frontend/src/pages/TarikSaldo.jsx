@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import axios from 'axios';
 
 export default function TarikSaldo() {
   const navigate = useNavigate();
@@ -24,7 +25,60 @@ export default function TarikSaldo() {
     { id: 4, type: 'info', title: 'Tips Pemilahan', message: 'Pisahkan sampah organik dan anorganik untuk poin lebih', time: '1 hari lalu', unread: false },
   ];
 
-  const saldoTersedia = parseFloat(localStorage.getItem('saldoTersedia') || '1250000');
+  const [saldoTersedia, setSaldoTersedia] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Fetch saldo dari backend saat component mount
+  useEffect(() => {
+    fetchUserData();
+    
+    // Auto-refresh saldo setiap 3 detik (sama seperti Dashboard)
+    const intervalId = setInterval(() => {
+      fetchUserData();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        console.warn('⚠️ Email tidak ada di localStorage');
+        return;
+      }
+      
+      console.log('👤 Email dari localStorage:', userEmail);
+      
+      // Fetch saldo terbaru dari database
+      const response = await axios.get('http://127.0.0.1:8000/api/users/all');
+      if (response.data.success) {
+        const userData = response.data.users.find(u => u.email === userEmail);
+        if (userData) {
+          console.log('💰 Data user dari database:', {
+            id: userData.id,
+            email: userData.email,
+            saldo: userData.saldo,
+            saldo_penarikan: userData.saldo_penarikan
+          });
+          
+          // Gunakan saldo_penarikan (dari setoran sampah)
+          setSaldoTersedia(parseFloat(userData.saldo_penarikan) || 0);
+          setCurrentUser({
+            id: userData.id,
+            email: userData.email,
+            saldo: userData.saldo,
+            saldo_penarikan: userData.saldo_penarikan
+          });
+        } else {
+          console.error('❌ User tidak ditemukan di database dengan email:', userEmail);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error fetching user data:', error);
+      setSaldoTersedia(0);
+    }
+  };
   const minPenarikan = 50000;
   const maxPenarikan = saldoTersedia;
 
@@ -114,7 +168,6 @@ export default function TarikSaldo() {
     if (confirm(`Apakah Anda yakin ingin menarik saldo Rp ${jumlah.toLocaleString()}?`)) {
       setIsLoading(true);
       
-      // Simpan data penarikan ke localStorage
       const penarikanData = {
         id: `TRX-${Date.now()}`,
         jenis: 'Tarik',
@@ -128,24 +181,89 @@ export default function TarikSaldo() {
         timestamp: Date.now()
       };
       
-      // Simpan ke latestPenarikanActivity untuk dashboard
-      localStorage.setItem('latestPenarikanActivity', JSON.stringify(penarikanData));
+      // UPDATE SALDO DI DATABASE
+      updateSaldoDatabase(jumlah, penarikanData);
+    }
+  };
+
+  const updateSaldoDatabase = async (jumlah, penarikanData) => {
+    try {
+      if (!currentUser || !currentUser.id) {
+        console.error('❌ User data tidak lengkap:', currentUser);
+        throw new Error('User data tidak ditemukan. Silakan login ulang.');
+      }
+
+      const token = localStorage.getItem('token');
+      const userId = currentUser.id;
+
+      console.log('🔄 Memproses penarikan:', {
+        userId,
+        jumlah,
+        saldoSebelum: saldoTersedia,
+        hasToken: !!token
+      });
+
+      // Hit API untuk update saldo (KURANGI karena penarikan)
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/users/${userId}/update-saldo`,
+        {
+          amount: jumlah,
+          type: 'kurang', // Penarikan = kurangi saldo
+          keterangan: `Penarikan ke ${penarikanData.bank} rekening ${penarikanData.rekening}`
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      console.log('✅ Response dari server:', response.data);
+
+      if (response.data.success) {
+        // Simpan ke localStorage untuk fallback
+        localStorage.setItem('latestPenarikanActivity', JSON.stringify(penarikanData));
+        const existingTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
+        existingTransaksi.unshift(penarikanData);
+        localStorage.setItem('riwayatTransaksi', JSON.stringify(existingTransaksi));
+        
+        // Update localStorage saldo
+        const newSaldo = response.data.user.saldo;
+        localStorage.setItem('saldoTersedia', newSaldo.toString());
+        
+        console.log('💰 Saldo berhasil diupdate:', {
+          saldoLama: saldoTersedia,
+          saldoBaru: newSaldo,
+          selisih: jumlah
+        });
+        
+        // Redirect
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate('/penarikan-berhasil', { state: { penarikanData } });
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('❌ Error detail:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       
-      // Simpan ke riwayat transaksi
-      const existingTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
-      existingTransaksi.unshift(penarikanData);
-      localStorage.setItem('riwayatTransaksi', JSON.stringify(existingTransaksi));
+      setIsLoading(false);
       
-      // TAMBAH saldo karena uang masuk ke rekening pengguna (bukan kurangi)
-      const currentSaldo = parseFloat(localStorage.getItem('saldoTersedia') || saldoTersedia);
-      const newSaldo = currentSaldo + jumlah; // DITAMBAH bukan dikurangi
-      localStorage.setItem('saldoTersedia', newSaldo.toString());
+      let errorMsg = 'Gagal melakukan penarikan. ';
+      if (error.response?.status === 401) {
+        errorMsg += 'Sesi Anda telah berakhir. Silakan login ulang.';
+      } else if (error.response?.data?.message) {
+        errorMsg += error.response.data.message;
+      } else {
+        errorMsg += error.message;
+      }
       
-      // Redirect ke halaman berhasil dengan loading
-      setTimeout(() => {
-        setIsLoading(false);
-        navigate('/penarikan-berhasil', { state: { penarikanData } });
-      }, 2000);
+      alert(errorMsg);
     }
   };
 

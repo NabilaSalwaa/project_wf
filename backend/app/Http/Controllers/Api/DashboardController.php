@@ -3,12 +3,32 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
     public function summary(Request $r)
     {
-        $user = $r->user();
+        // Ambil email dari query parameter atau request body
+        $email = $r->input('email') ?? $r->query('email');
+        
+        if (!$email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email tidak ditemukan'
+            ], 400);
+        }
+
+        // Cari user berdasarkan email
+        $user = User::where('email', $email)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
+        }
+
         $totalAmount = $user->transactions()->sum('amount');
         $totalWeight = $user->transactions()->sum('weight');
         $byCategory = $user->transactions()

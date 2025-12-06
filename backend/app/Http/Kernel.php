@@ -32,8 +32,6 @@ class Kernel extends HttpKernel
     ];
 
     protected $routeMiddleware = [
-        // 'auth' => \App\Http\Middleware\Authenticate::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-        // Tambahkan middleware route di sini
     ];
 }

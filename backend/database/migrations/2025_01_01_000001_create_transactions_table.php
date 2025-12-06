@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->enum('type', ['setor', 'tarik']);
+            $table->enum('type', ['setor', 'tarik', 'deposit', 'withdraw']);
             $table->string('category');
             $table->decimal('weight', 8,2);
             $table->decimal('amount', 12,2);
