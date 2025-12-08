@@ -80,6 +80,45 @@ export default function KonfirmasiSetoran() {
         console.log('💰 Saldo penarikan baru:', response.data.saldo_penarikan);
         console.log('💵 Saldo dashboard:', response.data.saldo_dashboard);
         
+        // Simpan ke localStorage untuk ditampilkan di Data Sampah admin
+        const setoranList = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+        
+        const newSetoran = {
+          id: `WS-${String(setoranList.length + 1).padStart(3, '0')}`,
+          transaction_id: response.data.transaction.id,
+          nama: userData.name || userEmail.split('@')[0],
+          email: userEmail,
+          user_id: userData.id,
+          foto: userData.profile_photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || userEmail)}&background=22C55E&color=fff`,
+          jenis: setoranData.jenis_sampah,
+          berat: `${setoranData.berat} kg`,
+          tanggal: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          idNasabah: `#NSB-${String(userData.id).padStart(3, '0')}`,
+          fotoSampah: setoranData.foto, // Foto base64 dari SetorSampah
+          totalPembayaran: parseFloat(setoranData.total_harga), // Simpan sebagai number untuk perhitungan
+          totalPembayaranFormatted: `Rp ${parseFloat(setoranData.total_harga).toLocaleString('id-ID')}`, // String untuk display
+          harga_per_kg: setoranData.harga_per_kg || 0,
+          detailSampah: [
+            {
+              jenis: setoranData.jenis_sampah,
+              kategori: setoranData.jenis_sampah.toUpperCase(),
+              berat: parseFloat(setoranData.berat), // Number untuk perhitungan
+              beratFormatted: `${setoranData.berat} kg`, // String untuk display
+              harga: parseFloat(setoranData.total_harga), // Number
+              hargaFormatted: `Rp ${parseFloat(setoranData.total_harga).toLocaleString('id-ID')}` // String untuk display
+            }
+          ],
+          akurasi: '95.0%',
+          objekTerdeteksi: '1 Item',
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+        
+        setoranList.push(newSetoran);
+        localStorage.setItem('setoranSampahList', JSON.stringify(setoranList));
+        
+        console.log('📦 Data setoran disimpan untuk admin:', newSetoran);
+        
         // Navigasi ke halaman setoran berhasil
         navigate('/setoran-berhasil', { 
           state: { 

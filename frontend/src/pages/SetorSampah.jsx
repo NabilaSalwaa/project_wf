@@ -115,8 +115,13 @@ export default function SetorSampah() {
     setLoading(true);
     
     try {
-      // Langsung kirim ke halaman konfirmasi tanpa hit backend dulu
-      setTimeout(() => {
+      // Convert foto ke base64 untuk disimpan
+      const reader = new FileReader();
+      reader.readAsDataURL(foto);
+      
+      reader.onloadend = () => {
+        const fotoBase64 = reader.result;
+        
         setLoading(false);
         navigate('/konfirmasi-setoran', { 
           state: { 
@@ -126,13 +131,14 @@ export default function SetorSampah() {
               harga_per_kg: parseFloat(hargaPerKg),
               total_harga: parseFloat(berat) * parseFloat(hargaPerKg),
               catatan,
-              previewUrl,
-              foto,
+              foto: fotoBase64, // Simpan sebagai base64
+              foto_preview: previewUrl, // Preview URL untuk tampilan
+              foto_name: foto.name,
               timestamp: new Date().toISOString()
             }
           } 
         });
-      }, 500);
+      };
     } catch (error) {
       setLoading(false);
       console.error('Error:', error);

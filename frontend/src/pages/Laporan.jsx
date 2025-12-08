@@ -110,14 +110,94 @@ export default function Laporan() {
   const [periodeView, setPeriodeView] = useState('bulanan');
   const [showComparison, setShowComparison] = useState(false);
   const [animateCharts, setAnimateCharts] = useState(true);
+  const [pieChartKey, setPieChartKey] = useState(0); // Key untuk trigger re-render pie chart
   const [stats, setStats] = useState({
-    totalSetoran: 12450000,
-    totalPenarikan: 8750000,
-    totalBeratSampah: 2840,
-    setoranChange: 12.5,
-    penarikanChange: -5.2,
-    beratChange: 8.3
+    totalSetoran: 0,
+    totalPenarikan: 0,
+    totalBeratSampah: 0,
+    setoranChange: 0,
+    penarikanChange: 0,
+    beratChange: 0
   });
+
+  // Load real-time data from localStorage
+  React.useEffect(() => {
+    const loadLaporanData = () => {
+      try {
+        // Load data dari setoranSampahList (semua setoran dari nasabah)
+        const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+        
+        // Load verifikasi data untuk yang sudah disetujui
+        const verifikasiData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+        const approvedItems = verifikasiData.filter(item => item.status === 'approved');
+
+        // Load penarikan data
+        const penarikanData = JSON.parse(localStorage.getItem('penarikanList') || '[]');
+
+        // Calculate totals dari setoranSampahList (semua data setoran)
+        const totalSetoran = setoranData.reduce((sum, item) => {
+          // Handle both number and string format (e.g., "Rp 100.000")
+          let total = 0;
+          if (typeof item.totalPembayaran === 'number') {
+            total = item.totalPembayaran;
+          } else if (typeof item.totalPembayaran === 'string') {
+            // Remove "Rp", dots, and spaces, then parse
+            total = parseFloat(item.totalPembayaran.replace(/[^0-9]/g, '')) || 0;
+          }
+          console.log('💰 Item setoran:', item.nama, '- Rp', total.toLocaleString('id-ID'));
+          return sum + total;
+        }, 0);
+        
+        const totalPenarikan = penarikanData.reduce((sum, item) => sum + (item.jumlah || 0), 0);
+        
+        // Calculate total berat sampah (kg) dari setoranSampahList
+        const totalBeratSampah = setoranData.reduce((sum, item) => {
+          const berat = item.detailSampah?.reduce((s, d) => {
+            // Handle both number and string format (e.g., "2.5 kg")
+            let beratValue = 0;
+            if (typeof d.berat === 'number') {
+              beratValue = d.berat;
+            } else if (typeof d.berat === 'string') {
+              beratValue = parseFloat(d.berat.replace(/[^0-9.]/g, '')) || 0;
+            }
+            return s + beratValue;
+          }, 0) || 0;
+          return sum + berat;
+        }, 0);
+
+        setStats({
+          totalSetoran,
+          totalPenarikan,
+          totalBeratSampah: totalBeratSampah.toFixed(1),
+          setoranChange: 0,
+          penarikanChange: 0,
+          beratChange: 0
+        });
+
+        // Trigger pie chart refresh
+        setPieChartKey(prev => prev + 1);
+
+        console.log('📊 Laporan data updated:', {
+          totalSetoran: `Rp ${totalSetoran.toLocaleString('id-ID')}`,
+          totalPenarikan: `Rp ${totalPenarikan.toLocaleString('id-ID')}`,
+          totalBeratSampah: totalBeratSampah.toFixed(1) + ' kg',
+          jumlahSetoran: setoranData.length,
+          jumlahPenarikan: penarikanData.length
+        });
+
+      } catch (error) {
+        console.error('❌ Error loading laporan data:', error);
+      }
+    };
+
+    // Load immediately
+    loadLaporanData();
+
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(loadLaporanData, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Data untuk chart Total Setoran per Bulan
   const getSetoranData = () => {
@@ -179,28 +259,47 @@ export default function Laporan() {
     }]
   };
 
-  // Data untuk pie chart Distribusi Jenis Sampah
-  const distribusiData = {
-    labels: ['Kertas', 'Botol', 'Logam', 'Plastik', 'Lainnya'],
-    datasets: [{
-      data: [35, 28, 15, 12, 10],
-      backgroundColor: [
-        'rgba(59, 130, 246, 0.8)',
-        'rgba(34, 197, 94, 0.8)',
-        'rgba(251, 146, 60, 0.8)',
-        'rgba(239, 68, 68, 0.8)',
-        'rgba(168, 85, 247, 0.8)',
-      ],
-      borderColor: [
-        'rgba(59, 130, 246, 1)',
-        'rgba(34, 197, 94, 1)',
-        'rgba(251, 146, 60, 1)',
-        'rgba(239, 68, 68, 1)',
-        'rgba(168, 85, 247, 1)',
-      ],
-      borderWidth: 2,
-    }]
+  // Data untuk pie chart Distribusi Jenis Sampah (Organik vs Anorganik)
+  const getDistribusiData = () => {
+    try {
+      // Load dari setoranSampahList untuk mendapatkan semua data setoran
+      const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+      
+      const organikCount = setoranData.filter(item => item.prediksiAI === 'Organik').length;
+      const anorganikCount = setoranData.filter(item => item.prediksiAI === 'Anorganik').length;
+      
+      console.log('📊 Distribusi Sampah:', { organikCount, anorganikCount, total: setoranData.length });
+      
+      return {
+        labels: ['Organik', 'Anorganik'],
+        datasets: [{
+          data: [organikCount, anorganikCount],
+          backgroundColor: [
+            'rgba(34, 197, 94, 0.8)',
+            'rgba(59, 130, 246, 0.8)',
+          ],
+          borderColor: [
+            'rgba(34, 197, 94, 1)',
+            'rgba(59, 130, 246, 1)',
+          ],
+          borderWidth: 2,
+        }]
+      };
+    } catch (error) {
+      console.error('Error loading distribusi data:', error);
+      return {
+        labels: ['Organik', 'Anorganik'],
+        datasets: [{
+          data: [0, 0],
+          backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(59, 130, 246, 0.8)'],
+          borderColor: ['rgba(34, 197, 94, 1)', 'rgba(59, 130, 246, 1)'],
+          borderWidth: 2,
+        }]
+      };
+    }
   };
+
+  const distribusiData = getDistribusiData();
 
   const chartOptions = {
     responsive: true,
@@ -348,16 +447,58 @@ export default function Laporan() {
 
   const handleRefreshData = () => {
     setAnimateCharts(true);
+    setPieChartKey(prev => prev + 1); // Refresh pie chart
     handleGenerateLaporan();
     setTimeout(() => setAnimateCharts(false), 1500);
   };
 
   const handleExportPDF = () => {
-    alert('Mengekspor laporan ke format PDF...\nFile akan diunduh dalam beberapa detik.');
+    try {
+      const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+      const penarikanData = JSON.parse(localStorage.getItem('penarikanList') || '[]');
+      
+      const info = `
+LAPORAN BANK SAMPAH DIGITAL
+================================
+Periode: ${dateRange.start.split('-').reverse().join('/')} - ${dateRange.end.split('-').reverse().join('/')}
+Total Setoran: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalSetoran || 0)}
+Total Penarikan: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalPenarikan || 0)}
+Total Berat Sampah: ${parseFloat(stats.totalBeratSampah || 0).toFixed(1)} kg
+Total Transaksi Setoran: ${setoranData.length}
+Total Transaksi Penarikan: ${penarikanData.length}
+Last Update: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+      `;
+      
+      console.log('📄 Export PDF:', info);
+      alert('Mengekspor laporan ke format PDF...\n\nData:\n' + info + '\n\nFile akan diunduh dalam beberapa detik.');
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Terjadi kesalahan saat export PDF');
+    }
   };
 
   const handleExportExcel = () => {
-    alert('Mengekspor laporan ke format Excel...\nFile akan diunduh dalam beberapa detik.');
+    try {
+      const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+      const penarikanData = JSON.parse(localStorage.getItem('penarikanList') || '[]');
+      
+      const info = `
+LAPORAN BANK SAMPAH DIGITAL
+================================
+Periode: ${dateRange.start.split('-').reverse().join('/')} - ${dateRange.end.split('-').reverse().join('/')}
+Total Setoran: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalSetoran || 0)}
+Total Penarikan: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalPenarikan || 0)}
+Total Berat Sampah: ${parseFloat(stats.totalBeratSampah || 0).toFixed(1)} kg
+Total Transaksi Setoran: ${setoranData.length}
+Total Transaksi Penarikan: ${penarikanData.length}
+      `;
+      
+      console.log('📊 Export Excel:', info);
+      alert('Mengekspor laporan ke format Excel...\n\nData:\n' + info + '\n\nFile akan diunduh dalam beberapa detik.');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      alert('Terjadi kesalahan saat export Excel');
+    }
   };
 
   return (
@@ -635,7 +776,9 @@ export default function Laporan() {
                 </span>
               </div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Total Setoran</h3>
-              <p className="text-2xl font-bold text-gray-900">Rp {stats.totalSetoran.toLocaleString('id-ID')}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalSetoran || 0)}
+              </p>
             </div>
 
             {/* Total Penarikan */}
@@ -653,7 +796,9 @@ export default function Laporan() {
                 </span>
               </div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Total Penarikan</h3>
-              <p className="text-2xl font-bold text-gray-900">Rp {stats.totalPenarikan.toLocaleString('id-ID')}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalPenarikan || 0)}
+              </p>
             </div>
 
             {/* Total Berat Sampah */}
@@ -671,7 +816,7 @@ export default function Laporan() {
                 </span>
               </div>
               <h3 className="text-sm font-medium text-gray-500 mb-1">Total Berat Sampah</h3>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalBeratSampah.toLocaleString('id-ID')} kg</p>
+              <p className="text-2xl font-bold text-gray-900">{parseFloat(stats.totalBeratSampah || 0).toFixed(1)} kg</p>
             </div>
           </div>
 
@@ -765,7 +910,7 @@ export default function Laporan() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-shadow">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Distribusi Jenis Sampah</h3>
               <div className="h-80">
-                <Pie data={distribusiData} options={pieChartOptions} />
+                <Pie key={pieChartKey} data={distribusiData} options={pieChartOptions} />
               </div>
             </div>
 
@@ -794,9 +939,11 @@ export default function Laporan() {
               <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <h4 className="text-sm font-semibold text-gray-900 mb-2">Informasi Laporan</h4>
                 <div className="space-y-1.5 text-xs text-gray-600">
-                  <p><span className="font-medium">Periode:</span> Jan - Des 2025</p>
-                  <p><span className="font-medium">Total Transaksi:</span> 1,247</p>
-                  <p><span className="font-medium">Last Update:</span> 29 Nov 2025</p>
+                  <p><span className="font-medium">Periode:</span> {dateRange.start.split('-').reverse().join('/')} - {dateRange.end.split('-').reverse().join('/')}</p>
+                  <p><span className="font-medium">Total Setoran:</span> {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalSetoran || 0)}</p>
+                  <p><span className="font-medium">Total Penarikan:</span> {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.totalPenarikan || 0)}</p>
+                  <p><span className="font-medium">Total Berat:</span> {parseFloat(stats.totalBeratSampah || 0).toFixed(1)} kg</p>
+                  <p><span className="font-medium">Last Update:</span> {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
               </div>
             </div>

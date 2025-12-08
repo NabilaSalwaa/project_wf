@@ -70,47 +70,6 @@ const sidebarMenu = [
   },
 ];
 
-const statCards = [
-  {
-    title: 'Total Nasabah',
-    value: '1,247',
-    subtitle: '+12% dari bulan lalu',
-    trend: 'up',
-    icon: '📈',
-  },
-  {
-    title: 'Total Setoran',
-    value: 'Rp 45.2M',
-    subtitle: '+8.5% dari bulan lalu',
-    trend: 'up',
-  },
-  {
-    title: 'Total Penarikan',
-    value: 'Rp 32.1M',
-    subtitle: '-3.2% dari bulan lalu',
-    trend: 'down',
-  },
-  {
-    title: 'Butuh Verifikasi',
-    value: '23',
-    subtitle: 'data menunggu verifikasi',
-    trend: 'warning',
-  },
-];
-
-const pieData = [
-  { name: 'Organik', value: 59.7, color: '#22C55E' },
-  { name: 'Anorganik', value: 40.3, color: '#3B82F6' },
-];
-
-const transactions = [
-  { name: 'Sari Dewi', type: 'Setoran', amount: 'Rp 125,000', status: 'Selesai', avatar: 'https://ui-avatars.com/api/?name=Sari+Dewi&background=22C55E&color=fff' },
-  { name: 'Budi Santoso', type: 'Penarikan', amount: 'Rp 75,000', status: 'Proses', avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=3B82F6&color=fff' },
-  { name: 'Maya Putri', type: 'Setoran', amount: 'Rp 200,000', status: 'Selesai', avatar: 'https://ui-avatars.com/api/?name=Maya+Putri&background=22C55E&color=fff' },
-  { name: 'Agus Rahman', type: 'Setoran', amount: 'Rp 90,000', status: 'Proses', avatar: 'https://ui-avatars.com/api/?name=Agus+Rahman&background=3B82F6&color=fff' },
-  { name: 'Lisa Handayani', type: 'Penarikan', amount: 'Rp 150,000', status: 'Selesai', avatar: 'https://ui-avatars.com/api/?name=Lisa+Handayani&background=22C55E&color=fff' },
-];
-
 function StatCard({ stat }) {
   const getTrendColor = (trend) => {
     if (trend === 'up') return 'text-green-600';
@@ -158,6 +117,110 @@ export default function DashboardAdmin() {
     return stored ? parseInt(stored) : Date.now() - 60000; // Default: check last 1 minute
   });
 
+  // Real-time stats
+  const [stats, setStats] = useState({
+    totalNasabah: 0,
+    totalSetoran: 0,
+    totalPenarikan: 0,
+    pendingVerifikasi: 0
+  });
+
+  const [pieData, setPieData] = useState([
+    { name: 'Organik', value: 0, color: '#22C55E' },
+    { name: 'Anorganik', value: 0, color: '#3B82F6' },
+  ]);
+
+  const [recentTransactions, setRecentTransactions] = useState([]);
+
+  // Load real-time data
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        // 1. Load Total Nasabah dari API
+        const response = await axios.get('http://127.0.0.1:8000/api/users/all');
+        const totalNasabah = response.data.success 
+          ? response.data.users.filter(u => u.role !== 'admin').length 
+          : 0;
+
+        // 2. Load Verifikasi Data
+        const verifikasiData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+        const approvedItems = verifikasiData.filter(item => item.status === 'approved');
+        const pendingItems = verifikasiData.filter(item => item.status === 'pending');
+
+        // 3. Load Penarikan Data
+        const penarikanData = JSON.parse(localStorage.getItem('penarikanList') || '[]');
+
+        // 4. Calculate Total Setoran (dari approved verifikasi)
+        const totalSetoran = approvedItems.reduce((sum, item) => sum + (item.totalPembayaran || 0), 0);
+
+        // 5. Calculate Total Penarikan
+        const totalPenarikan = penarikanData.reduce((sum, item) => sum + (item.jumlah || 0), 0);
+
+        // 6. Calculate Pie Chart Data (Organik vs Anorganik)
+        const organikCount = approvedItems.filter(item => item.prediksiAI === 'Organik').length;
+        const anorganikCount = approvedItems.filter(item => item.prediksiAI === 'Anorganik').length;
+        const total = organikCount + anorganikCount;
+
+        if (total > 0) {
+          setPieData([
+            { name: 'Organik', value: ((organikCount / total) * 100).toFixed(1), color: '#22C55E' },
+            { name: 'Anorganik', value: ((anorganikCount / total) * 100).toFixed(1), color: '#3B82F6' },
+          ]);
+        }
+
+        // 7. Get Recent Transactions (5 terbaru)
+        const allTransactions = [
+          ...approvedItems.map(item => ({
+            nama: item.nama,
+            type: 'Setoran',
+            amount: item.totalPembayaran || 0,
+            status: 'Selesai',
+            avatar: item.foto || `https://ui-avatars.com/api/?name=${item.nama}&background=22C55E&color=fff`,
+            timestamp: new Date(item.approvedAt || item.created_at).getTime()
+          })),
+          ...penarikanData.map(item => ({
+            nama: item.nama,
+            type: 'Penarikan',
+            amount: item.jumlah || 0,
+            status: item.status || 'Selesai',
+            avatar: item.foto || `https://ui-avatars.com/api/?name=${item.nama}&background=EF4444&color=fff`,
+            timestamp: new Date(item.tanggal || item.created_at).getTime()
+          }))
+        ];
+
+        // Sort by timestamp descending
+        allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+        setRecentTransactions(allTransactions.slice(0, 5));
+
+        // Update stats
+        setStats({
+          totalNasabah,
+          totalSetoran,
+          totalPenarikan,
+          pendingVerifikasi: pendingItems.length
+        });
+
+        console.log('📊 Dashboard data updated:', {
+          totalNasabah,
+          totalSetoran,
+          totalPenarikan,
+          pendingVerifikasi: pendingItems.length
+        });
+
+      } catch (error) {
+        console.error('❌ Error loading dashboard data:', error);
+      }
+    };
+
+    // Load immediately
+    loadDashboardData();
+
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(loadDashboardData, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Check for new users every 5 seconds
   useEffect(() => {
     const checkNewUsers = async () => {
@@ -198,6 +261,43 @@ export default function DashboardAdmin() {
     
     return () => clearInterval(interval);
   }, [lastCheckedTime]);
+
+  const formatRupiah = (angka) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(angka);
+  };
+
+  // Dynamic stat cards with real data
+  const statCards = [
+    {
+      title: 'Total Nasabah',
+      value: stats.totalNasabah.toString(),
+      subtitle: 'Nasabah terdaftar',
+      trend: 'up',
+      icon: '👥',
+    },
+    {
+      title: 'Total Setoran',
+      value: formatRupiah(stats.totalSetoran),
+      subtitle: 'Dari verifikasi disetujui',
+      trend: 'up',
+    },
+    {
+      title: 'Total Penarikan',
+      value: formatRupiah(stats.totalPenarikan),
+      subtitle: 'Total dicairkan nasabah',
+      trend: stats.totalPenarikan > 0 ? 'down' : 'up',
+    },
+    {
+      title: 'Butuh Verifikasi',
+      value: stats.pendingVerifikasi.toString(),
+      subtitle: 'data menunggu verifikasi',
+      trend: 'warning',
+    },
+  ];
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -391,7 +491,7 @@ export default function DashboardAdmin() {
                 {pieData.map((d, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full" style={{backgroundColor: d.color}}></span>
-                    <span className="text-sm font-medium text-gray-700">{d.name}</span>
+                    <span className="text-sm font-medium text-gray-700">{d.name} ({d.value}%)</span>
                   </div>
                 ))}
               </div>
@@ -401,39 +501,55 @@ export default function DashboardAdmin() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Transaksi Terbaru</h3>
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Nasabah</th>
-                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Jenis</th>
-                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Jumlah</th>
-                      <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((tx, i) => (
-                      <tr key={i} className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors">
-                        <td className="py-3 px-2">
-                          <div className="flex items-center gap-2">
-                            <img src={tx.avatar} alt={tx.name} className="w-8 h-8 rounded-full" />
-                            <span className="text-sm font-medium text-gray-900">{tx.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-2 text-sm text-gray-600">{tx.type}</td>
-                        <td className="py-3 px-2 text-sm font-semibold text-gray-900">{tx.amount}</td>
-                        <td className="py-3 px-2">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                            ${tx.status === 'Selesai' 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                            {tx.status}
-                          </span>
-                        </td>
+                {recentTransactions.length > 0 ? (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Nasabah</th>
+                        <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Jenis</th>
+                        <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                        <th className="text-left py-3 px-2 text-xs font-medium text-gray-500 uppercase">Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {recentTransactions.map((tx, i) => (
+                        <tr key={i} className="border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors">
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-2">
+                              <img src={tx.avatar} alt={tx.nama} className="w-8 h-8 rounded-full" />
+                              <span className="text-sm font-medium text-gray-900">{tx.nama}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className={`text-sm font-medium ${tx.type === 'Setoran' ? 'text-green-600' : 'text-red-600'}`}>
+                              {tx.type}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-sm font-semibold text-gray-900">
+                            {formatRupiah(tx.amount)}
+                          </td>
+                          <td className="py-3 px-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
+                              ${tx.status === 'Selesai' 
+                                ? 'bg-green-100 text-green-700' 
+                                : 'bg-yellow-100 text-yellow-700'
+                              }`}>
+                              {tx.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-8">
+                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-gray-500 font-medium">Belum ada transaksi</p>
+                    <p className="text-gray-400 text-sm mt-1">Transaksi akan muncul setelah ada setoran atau penarikan</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

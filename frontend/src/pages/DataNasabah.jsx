@@ -251,7 +251,7 @@ export default function DataNasabah() {
               name: user.name,
               email: user.email,
               phone: user.phone || '-',
-              saldo: parseFloat(user.saldo) || 0,
+              saldo: parseFloat(user.saldo_penarikan) || 0, // Gunakan saldo_penarikan (dari setoran yang disetujui)
               status: 'Aktif',
               avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=10B981&color=fff`
             };
@@ -260,7 +260,7 @@ export default function DataNasabah() {
         console.log('📊 Total nasabah:', transformedData.length);
         transformedData.forEach(user => {
           if (user.email === 'ahmadrizki@gmail.com') {
-            console.log('💰 Saldo Ahmad Rizki:', user.saldo);
+            console.log('💰 Saldo Penarikan Ahmad Rizki:', user.saldo);
           }
         });
         

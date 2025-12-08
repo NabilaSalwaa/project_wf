@@ -69,146 +69,12 @@ const sidebarMenu = [
   },
 ];
 
-// Data transaksi dummy
-const initialTransaksiData = [
-  {
-    id: 'NSB001',
-    nama: 'Siti Rahayu',
-    idNasabah: 'ID-NSB001',
-    foto: 'https://ui-avatars.com/api/?name=Siti+Rahayu&background=22C55E&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 25000,
-    beratSampah: '2.5 kg',
-    metode: 'AI',
-    tanggal: '15 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB002',
-    nama: 'Ahmad Budiono',
-    idNasabah: 'ID-NSB002',
-    foto: 'https://ui-avatars.com/api/?name=Ahmad+Budiono&background=EF4444&color=fff',
-    jenisTransaksi: 'Penarikan',
-    jumlah: 50000,
-    beratSampah: '-',
-    metode: 'AI',
-    tanggal: '14 Des 2025',
-    status: 'Proses',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB003',
-    nama: 'Maya Sari',
-    idNasabah: 'ID-NSB003',
-    foto: 'https://ui-avatars.com/api/?name=Maya+Sari&background=3B82F6&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 15000,
-    beratSampah: '1.5 kg',
-    metode: 'AI',
-    tanggal: '13 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB004',
-    nama: 'Budi Santoso',
-    idNasabah: 'ID-NSB004',
-    foto: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=8B5CF6&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 32000,
-    beratSampah: '3.2 kg',
-    metode: 'AI',
-    tanggal: '13 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB005',
-    nama: 'Dewi Lestari',
-    idNasabah: 'ID-NSB005',
-    foto: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=F59E0B&color=fff',
-    jenisTransaksi: 'Penarikan',
-    jumlah: 75000,
-    beratSampah: '-',
-    metode: 'AI',
-    tanggal: '12 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB006',
-    nama: 'Andi Wijaya',
-    idNasabah: 'ID-NSB006',
-    foto: 'https://ui-avatars.com/api/?name=Andi+Wijaya&background=EC4899&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 18500,
-    beratSampah: '1.8 kg',
-    metode: 'AI',
-    tanggal: '12 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB007',
-    nama: 'Rina Marlina',
-    idNasabah: 'ID-NSB007',
-    foto: 'https://ui-avatars.com/api/?name=Rina+Marlina&background=10B981&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 28000,
-    beratSampah: '2.8 kg',
-    metode: 'AI',
-    tanggal: '11 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB008',
-    nama: 'Joko Susilo',
-    idNasabah: 'ID-NSB008',
-    foto: 'https://ui-avatars.com/api/?name=Joko+Susilo&background=6366F1&color=fff',
-    jenisTransaksi: 'Penarikan',
-    jumlah: 100000,
-    beratSampah: '-',
-    metode: 'AI',
-    tanggal: '10 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB009',
-    nama: 'Sri Wahyuni',
-    idNasabah: 'ID-NSB009',
-    foto: 'https://ui-avatars.com/api/?name=Sri+Wahyuni&background=F97316&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 22000,
-    beratSampah: '2.2 kg',
-    metode: 'AI',
-    tanggal: '10 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  },
-  {
-    id: 'NSB010',
-    nama: 'Hadi Purnomo',
-    idNasabah: 'ID-NSB010',
-    foto: 'https://ui-avatars.com/api/?name=Hadi+Purnomo&background=14B8A6&color=fff',
-    jenisTransaksi: 'Setoran',
-    jumlah: 19500,
-    beratSampah: '1.9 kg',
-    metode: 'AI',
-    tanggal: '09 Des 2025',
-    status: 'Selesai',
-    aksi: 'Detail'
-  }
-];
-
 export default function Transaksi() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState(4);
   const [activeTab, setActiveTab] = useState('Semua');
   const [searchQuery, setSearchQuery] = useState('');
-  const [transaksiData, setTransaksiData] = useState(initialTransaksiData);
+  const [transaksiData, setTransaksiData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('tanggal');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -217,6 +83,87 @@ export default function Transaksi() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaksi, setSelectedTransaksi] = useState(null);
   const itemsPerPage = 10;
+
+  // Load transaksi dari localStorage (verifikasi approved & penarikan)
+  React.useEffect(() => {
+    const loadTransaksi = () => {
+      try {
+        const transaksiList = [];
+        
+        // 1. Load dari verifikasiList (setoran yang diapprove)
+        const verifikasiData = localStorage.getItem('verifikasiList');
+        if (verifikasiData) {
+          const verifikasi = JSON.parse(verifikasiData);
+          const approvedItems = verifikasi.filter(item => item.status === 'approved');
+          
+          approvedItems.forEach(item => {
+            // Convert ke format transaksi
+            const transaksi = {
+              id: item.id,
+              nama: item.nama,
+              idNasabah: item.idNasabah,
+              foto: item.foto || `https://ui-avatars.com/api/?name=${item.nama}&background=22C55E&color=fff`,
+              jenisTransaksi: 'Setoran',
+              jumlah: item.totalPembayaran || 0,
+              beratSampah: item.detailSampah?.reduce((sum, s) => sum + parseFloat(s.berat || 0), 0).toFixed(1) + ' kg' || '-',
+              metode: 'AI Detection',
+              tanggal: new Date(item.approvedAt || item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+              status: 'Selesai',
+              aksi: 'Detail',
+              prediksiAI: item.prediksiAI,
+              fotoSampah: item.fotoSampah
+            };
+            
+            // Cek apakah sudah ada, jika belum tambahkan
+            if (!transaksiList.some(t => t.id === transaksi.id)) {
+              transaksiList.unshift(transaksi);
+            }
+          });
+        }
+        
+        // 2. Load dari penarikanList (penarikan saldo)
+        const penarikanData = localStorage.getItem('penarikanList');
+        if (penarikanData) {
+          const penarikan = JSON.parse(penarikanData);
+          
+          penarikan.forEach(item => {
+            const transaksi = {
+              id: item.id,
+              nama: item.nama,
+              idNasabah: item.idNasabah,
+              foto: item.foto || `https://ui-avatars.com/api/?name=${item.nama}&background=EF4444&color=fff`,
+              jenisTransaksi: 'Penarikan',
+              jumlah: item.jumlah || 0,
+              beratSampah: '-',
+              metode: item.metode || 'Transfer Bank',
+              tanggal: new Date(item.tanggal || item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+              status: item.status || 'Selesai',
+              aksi: 'Detail',
+              noRekening: item.noRekening,
+              bank: item.bank
+            };
+            
+            // Cek apakah sudah ada
+            if (!transaksiList.some(t => t.id === transaksi.id)) {
+              transaksiList.unshift(transaksi);
+            }
+          });
+        }
+        
+        setTransaksiData(transaksiList);
+        console.log('✅ Transaksi loaded:', transaksiList.length, 'items');
+      } catch (err) {
+        console.error('❌ Error loading transaksi:', err);
+      }
+    };
+    
+    // Load immediately
+    loadTransaksi();
+    
+    // Auto-refresh every 10 seconds for real-time updates
+    const interval = setInterval(loadTransaksi, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleMenuClick = (index, path) => {
     setActiveMenu(index);

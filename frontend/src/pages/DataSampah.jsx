@@ -68,99 +68,91 @@ const sidebarMenu = [
   },
 ];
 
-// Sample data dengan detail lengkap untuk setiap nasabah
-const sampahData = [
-  { 
-    id: 'WS-001', 
-    nama: 'Siti Aminah', 
-    foto: 'https://ui-avatars.com/api/?name=Siti+Aminah&background=22C55E&color=fff', 
-    jenis: 'Anorganik', 
-    berat: '2.5 kg', 
-    tanggal: '12 Jan 2025, 14:30',
-    idNasabah: '#NSB-001',
-    fotoSampah: 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?w=800',
-    akurasi: '94.8%',
-    objekTerdeteksi: '12 Item',
-    detailSampah: [
-      { jenis: 'Botol Plastik', kategori: 'PET', berat: '2.5 kg', harga: 'Rp 5.000' },
-      { jenis: 'Kaleng Aluminium', kategori: 'ALU', berat: '1.8 kg', harga: 'Rp 7.200' },
-      { jenis: 'Kardus', kategori: 'PAPER', berat: '3.2 kg', harga: 'Rp 6.400' }
-    ],
-    totalPembayaran: 'Rp 18.600'
-  },
-  { 
-    id: 'WS-002', 
-    nama: 'Budi Santoso', 
-    foto: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=3B82F6&color=fff', 
-    jenis: 'Organik', 
-    berat: '3.2 kg', 
-    tanggal: '12 Jan 2025, 13:15',
-    idNasabah: '#NSB-002',
-    fotoSampah: 'https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=800',
-    akurasi: '91.2%',
-    objekTerdeteksi: '8 Item',
-    detailSampah: [
-      { jenis: 'Botol Kaca', kategori: 'GLASS', berat: '2.0 kg', harga: 'Rp 4.000' },
-      { jenis: 'Kertas Koran', kategori: 'PAPER', berat: '1.2 kg', harga: 'Rp 2.400' }
-    ],
-    totalPembayaran: 'Rp 6.400'
-  },
-  { 
-    id: 'WS-003', 
-    nama: 'Dewi Lestari', 
-    foto: 'https://ui-avatars.com/api/?name=Dewi+Lestari&background=22C55E&color=fff', 
-    jenis: 'Anorganik', 
-    berat: '1.8 kg', 
-    tanggal: '12 Jan 2025, 12:00',
-    idNasabah: '#NSB-003',
-    fotoSampah: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=800',
-    akurasi: '89.5%',
-    objekTerdeteksi: '15 Item',
-    detailSampah: [
-      { jenis: 'Plastik HDPE', kategori: 'HDPE', berat: '1.8 kg', harga: 'Rp 3.600' }
-    ],
-    totalPembayaran: 'Rp 3.600'
-  },
-  { 
-    id: 'WS-004', 
-    nama: 'Ahmad Rizki', 
-    foto: 'https://ui-avatars.com/api/?name=Ahmad+Rizki&background=F59E0B&color=fff', 
-    jenis: 'Anorganik', 
-    berat: '4.1 kg', 
-    tanggal: '11 Jan 2025, 16:45',
-    idNasabah: '#NSB-004',
-    fotoSampah: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800',
-    akurasi: '96.3%',
-    objekTerdeteksi: '20 Item',
-    detailSampah: [
-      { jenis: 'Botol Plastik', kategori: 'PET', berat: '3.0 kg', harga: 'Rp 6.000' },
-      { jenis: 'Kaleng Aluminium', kategori: 'ALU', berat: '1.1 kg', harga: 'Rp 4.400' }
-    ],
-    totalPembayaran: 'Rp 10.400'
-  },
-  { 
-    id: 'WS-005', 
-    nama: 'Maya Putri', 
-    foto: 'https://ui-avatars.com/api/?name=Maya+Putri&background=22C55E&color=fff', 
-    jenis: 'Organik', 
-    berat: '2.0 kg', 
-    tanggal: '11 Jan 2025, 15:20',
-    idNasabah: '#NSB-005',
-    fotoSampah: 'https://images.unsplash.com/photo-1607687939738-a0442f5e4f4c?w=800',
-    akurasi: '92.7%',
-    objekTerdeteksi: '10 Item',
-    detailSampah: [
-      { jenis: 'Kardus', kategori: 'PAPER', berat: '2.0 kg', harga: 'Rp 4.000' }
-    ],
-    totalPembayaran: 'Rp 4.000'
-  },
-];
-
 export default function DataSampah() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState(2);
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua');
+  const [allSampahData, setAllSampahData] = useState([]);
+  const [stats, setStats] = useState({
+    totalStok: 0,
+    totalNilai: 0,
+    stokHariIni: 0
+  });
+
+  // Load data dari localStorage saat component mount
+  React.useEffect(() => {
+    const loadSampahData = () => {
+      const setoranFromStorage = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+      
+      // Hanya gunakan data real dari localStorage
+      const realData = [...setoranFromStorage];
+      
+      // Sort berdasarkan tanggal terbaru
+      realData.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+        const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+        return dateB - dateA;
+      });
+      
+      // Calculate stats
+      const totalStok = realData.reduce((sum, item) => {
+        const berat = item.detailSampah?.reduce((s, d) => {
+          if (typeof d.berat === 'number') return s + d.berat;
+          if (typeof d.berat === 'string') return s + (parseFloat(d.berat.replace(/[^0-9.]/g, '')) || 0);
+          return s;
+        }, 0) || 0;
+        return sum + berat;
+      }, 0);
+      
+      const totalNilai = realData.reduce((sum, item) => {
+        let total = 0;
+        if (typeof item.totalPembayaran === 'number') {
+          total = item.totalPembayaran;
+        } else if (typeof item.totalPembayaran === 'string') {
+          total = parseFloat(item.totalPembayaran.replace(/[^0-9]/g, '')) || 0;
+        }
+        return sum + total;
+      }, 0);
+      
+      // Stok hari ini (transaksi hari ini)
+      const today = new Date().toDateString();
+      const stokHariIni = realData.reduce((sum, item) => {
+        const itemDate = item.created_at ? new Date(item.created_at).toDateString() : '';
+        if (itemDate === today) {
+          const berat = item.detailSampah?.reduce((s, d) => {
+            if (typeof d.berat === 'number') return s + d.berat;
+            if (typeof d.berat === 'string') return s + (parseFloat(d.berat.replace(/[^0-9.]/g, '')) || 0);
+            return s;
+          }, 0) || 0;
+          return sum + berat;
+        }
+        return sum;
+      }, 0);
+      
+      setStats({
+        totalStok: totalStok.toFixed(1),
+        totalNilai: totalNilai,
+        stokHariIni: stokHariIni.toFixed(1)
+      });
+      
+      setAllSampahData(realData);
+      console.log('📊 Data Sampah Updated:', {
+        total: realData.length,
+        totalStok: `${totalStok.toFixed(1)} kg`,
+        totalNilai: `Rp ${totalNilai.toLocaleString('id-ID')}`,
+        stokHariIni: `${stokHariIni.toFixed(1)} kg`
+      });
+    };
+    
+    // Load pertama kali
+    loadSampahData();
+    
+    // Auto-refresh setiap 10 detik
+    const interval = setInterval(loadSampahData, 10000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleMenuClick = (index, path) => {
     setActiveMenu(index);
@@ -176,7 +168,7 @@ export default function DataSampah() {
   };
 
   const getJenisStyle = (jenis) => {
-    if (jenis === 'Organik') return 'bg-green-50 text-green-700 border border-green-200';
+    if (jenis === 'Organik' || jenis === 'organik') return 'bg-green-50 text-green-700 border border-green-200';
     return 'bg-blue-50 text-blue-700 border border-blue-200';
   };
 
@@ -292,7 +284,7 @@ export default function DataSampah() {
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-1">Total Jenis</p>
-              <h3 className="text-2xl font-bold text-gray-900">12</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{allSampahData.length}</h3>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -304,7 +296,7 @@ export default function DataSampah() {
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-1">Total Stok</p>
-              <h3 className="text-2xl font-bold text-gray-900">2,847 kg</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.totalStok} kg</h3>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -317,7 +309,9 @@ export default function DataSampah() {
                 </div>
               </div>
               <p className="text-sm text-gray-500 mb-1">Total Nilai</p>
-              <h3 className="text-2xl font-bold text-gray-900">Rp 8,5 Jt</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(stats.totalNilai)}
+              </h3>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
@@ -328,8 +322,8 @@ export default function DataSampah() {
                   </svg>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 mb-1">Stok hari Hingga</p>
-              <h3 className="text-2xl font-bold text-gray-900">Rp 3.200</h3>
+              <p className="text-sm text-gray-500 mb-1">Stok Hari Ini</p>
+              <h3 className="text-2xl font-bold text-gray-900">{stats.stokHariIni} kg</h3>
             </div>
           </div>
 
@@ -390,17 +384,37 @@ export default function DataSampah() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {sampahData.map((item) => (
+                {allSampahData.length > 0 ? allSampahData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 transition-all duration-150">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.id}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img src={item.foto} alt={item.nama} className="w-8 h-8 rounded-full" />
-                        <span className="text-sm font-medium text-gray-900">{item.nama}</span>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{item.nama}</div>
+                          {item.status === 'pending' && (
+                            <span className="text-xs text-yellow-600 font-medium">⏱ Menunggu Verifikasi</span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <img src={item.foto} alt="Sampah" className="w-10 h-10 rounded-lg object-cover" />
+                      {item.fotoSampah ? (
+                        <img 
+                          src={item.fotoSampah} 
+                          alt="Sampah" 
+                          className="w-16 h-16 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform" 
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://via.placeholder.com/100?text=No+Image';
+                          }}
+                          onClick={() => window.open(item.fotoSampah, '_blank')}
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">No Image</span>
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-semibold ${getJenisStyle(item.jenis)}`}>
@@ -418,14 +432,20 @@ export default function DataSampah() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                      Belum ada data setoran sampah
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
 
             {/* Pagination */}
             <div className="px-6 py-4 bg-white border-t border-gray-200">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-500">Menampilkan 1-5 dari 120 data</p>
+                <p className="text-sm text-gray-500">Menampilkan 1-{allSampahData.length} dari {allSampahData.length} data</p>
                 <div className="flex items-center gap-2">
                   <button className="px-4 py-2 text-[13px] font-medium rounded-lg transition-colors bg-gray-100 text-gray-400 cursor-not-allowed">
                     Previous

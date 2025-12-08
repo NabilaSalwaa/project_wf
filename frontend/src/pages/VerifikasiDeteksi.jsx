@@ -114,40 +114,67 @@ export default function VerifikasiDeteksi() {
   const [searchQuery, setSearchQuery] = useState('');
   const [jenisFilter, setJenisFilter] = useState('Semua Jenis');
   const [confidenceFilter, setConfidenceFilter] = useState('Semua Confidence');
-  const [verificationData, setVerificationData] = useState(mockVerificationData);
+  const [verificationData, setVerificationData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
   React.useEffect(() => {
-    const fetchData = async () => {
+    const loadVerificationData = () => {
       try {
-        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-        if (!token) {
-          console.log('No token found, using mock data');
-          return;
-        }
+        // Load from localStorage 'setoranSampahList' (semua data setoran)
+        const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
         
-        const res = await fetch('http://127.0.0.1:8000/api/setor-sampah?status=pending', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
+        // Load from localStorage 'verifikasiList' (data yang sudah di halaman verifikasi)
+        const verifikasiData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+        
+        // Gabungkan kedua data
+        const allData = [...verifikasiData];
+        
+        // Tambahkan data dari setoranSampahList yang belum ada di verifikasiList
+        setoranData.forEach(setoran => {
+          const isExist = verifikasiData.some(v => v.idDeteksi === setoran.id);
+          if (!isExist) {
+            // Convert format setoranSampahList ke format verifikasiList
+            const verifikasiItem = {
+              id: `VER${setoran.id.replace('WS-', '')}`,
+              idDeteksi: setoran.id,
+              nama: setoran.nama,
+              idNasabah: setoran.idNasabah,
+              foto: setoran.foto,
+              fotoSampah: setoran.fotoSampah,
+              prediksiAI: setoran.jenis || setoran.prediksiAI || 'Anorganik',
+              akurasi: setoran.akurasi || '95.0%',
+              confidenceScore: parseFloat(setoran.akurasi) || 95,
+              status: setoran.status || 'pending',
+              tanggal: setoran.tanggal,
+              waktu: setoran.tanggal.split(', ')[1] || '00:00',
+              detailSampah: setoran.detailSampah || [],
+              totalPembayaran: setoran.totalPembayaran || 0,
+              created_at: setoran.created_at
+            };
+            allData.push(verifikasiItem);
           }
         });
         
-        if (res.ok) {
-          const data = await res.json();
-          setVerificationData(data.data || []);
-        } else {
-          console.log('API response not OK, using empty data');
-        }
+        // Filter only pending items
+        const pendingData = allData.filter(item => item.status === 'pending');
+        setVerificationData(pendingData);
+        console.log('✅ Loaded verification data:', {
+          total: pendingData.length,
+          fromSetoranSampah: setoranData.length,
+          fromVerifikasiList: verifikasiData.length
+        });
       } catch (err) {
-        console.error('Error fetching data:', err);
-        // Don't crash, just use empty data
+        console.error('❌ Error loading verification data:', err);
+        setVerificationData([]);
       }
     };
     
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Check every 30 seconds instead of 5
+    // Load immediately
+    loadVerificationData();
+    
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(loadVerificationData, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -157,18 +184,18 @@ export default function VerifikasiDeteksi() {
                        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                        item.idNasabah.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchJenis = jenisFilter === 'Semua Jenis' || item.jenis === jenisFilter;
+    const matchJenis = jenisFilter === 'Semua Jenis' || item.prediksiAI === jenisFilter;
     
     let matchConfidence = true;
     if (confidenceFilter === '90% - 100%') {
-      matchConfidence = item.confidence >= 90;
+      matchConfidence = item.confidenceScore >= 90;
     } else if (confidenceFilter === '80% - 89%') {
-      matchConfidence = item.confidence >= 80 && item.confidence < 90;
+      matchConfidence = item.confidenceScore >= 80 && item.confidenceScore < 90;
     } else if (confidenceFilter === 'Dibawah 80%') {
-      matchConfidence = item.confidence < 80;
+      matchConfidence = item.confidenceScore < 80;
     }
 
-    return matchSearch && matchJenis && matchConfidence && item.status === 'pending';
+    return matchSearch && matchJenis && matchConfidence;
   });
 
   // Pagination
@@ -196,26 +223,104 @@ export default function VerifikasiDeteksi() {
   };
 
   const handleApprove = (id) => {
-    setVerificationData(prevData => 
-      prevData.map(item => 
-        item.id === id ? { ...item, status: 'approved' } : item
-      )
-    );
-    // Reset to page 1 if current page becomes empty
-    if (currentData.length === 1 && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    try {
+      // Get existing verification data from verifikasiList
+      const verifikasiData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+      
+      // Get existing data from setoranSampahList
+      const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+      
+      // Find the approved item
+      let approvedItem = verifikasiData.find(item => item.id === id);
+      
+      // If not found in verifikasiList, find in verification state
+      if (!approvedItem) {
+        approvedItem = verificationData.find(item => item.id === id);
+      }
+      
+      if (approvedItem) {
+        // Update status in verifikasiList
+        const updatedVerifikasiData = verifikasiData.map(item => 
+          item.id === id ? { ...item, status: 'approved', approvedAt: new Date().toISOString() } : item
+        );
+        
+        // If item not in verifikasiList yet, add it with approved status
+        if (!verifikasiData.find(item => item.id === id)) {
+          updatedVerifikasiData.push({ ...approvedItem, status: 'approved', approvedAt: new Date().toISOString() });
+        }
+        
+        // Update status in setoranSampahList
+        const updatedSetoranData = setoranData.map(item => 
+          item.id === approvedItem.idDeteksi ? { ...item, status: 'approved', approvedAt: new Date().toISOString() } : item
+        );
+        
+        // Save both
+        localStorage.setItem('verifikasiList', JSON.stringify(updatedVerifikasiData));
+        localStorage.setItem('setoranSampahList', JSON.stringify(updatedSetoranData));
+        
+        // Update local state (remove from pending list)
+        setVerificationData(prevData => prevData.filter(item => item.id !== id));
+        
+        console.log('✅ Data disetujui:', approvedItem);
+        
+        // Reset to page 1 if current page becomes empty
+        if (currentData.length === 1 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error approving data:', err);
     }
   };
 
   const handleReject = (id) => {
-    setVerificationData(prevData => 
-      prevData.map(item => 
-        item.id === id ? { ...item, status: 'rejected' } : item
-      )
-    );
-    // Reset to page 1 if current page becomes empty
-    if (currentData.length === 1 && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    try {
+      // Get existing verification data from verifikasiList
+      const verifikasiData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+      
+      // Get existing data from setoranSampahList
+      const setoranData = JSON.parse(localStorage.getItem('setoranSampahList') || '[]');
+      
+      // Find the rejected item
+      let rejectedItem = verifikasiData.find(item => item.id === id);
+      
+      // If not found in verifikasiList, find in verification state
+      if (!rejectedItem) {
+        rejectedItem = verificationData.find(item => item.id === id);
+      }
+      
+      if (rejectedItem) {
+        // Update status in verifikasiList
+        const updatedVerifikasiData = verifikasiData.map(item => 
+          item.id === id ? { ...item, status: 'rejected', rejectedAt: new Date().toISOString() } : item
+        );
+        
+        // If item not in verifikasiList yet, add it with rejected status
+        if (!verifikasiData.find(item => item.id === id)) {
+          updatedVerifikasiData.push({ ...rejectedItem, status: 'rejected', rejectedAt: new Date().toISOString() });
+        }
+        
+        // Update status in setoranSampahList
+        const updatedSetoranData = setoranData.map(item => 
+          item.id === rejectedItem.idDeteksi ? { ...item, status: 'rejected', rejectedAt: new Date().toISOString() } : item
+        );
+        
+        // Save both
+        localStorage.setItem('verifikasiList', JSON.stringify(updatedVerifikasiData));
+        localStorage.setItem('setoranSampahList', JSON.stringify(updatedSetoranData));
+        
+        // Update local state (remove from pending list)
+        setVerificationData(prevData => prevData.filter(item => item.id !== id));
+        
+        console.log('❌ Data ditolak:', rejectedItem);
+        
+        // Reset to page 1 if current page becomes empty
+        if (currentData.length === 1 && currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error rejecting data:', err);
     }
   };
 
@@ -226,15 +331,13 @@ export default function VerifikasiDeteksi() {
   };
 
   const getJenisBadge = (jenis) => {
-    if (jenis === 'Organik') {
-      return 'bg-green-50 text-green-700 border border-green-200';
-    }
-    return 'bg-blue-50 text-blue-700 border border-blue-200';
+    // All green now for consistency
+    return 'bg-green-50 text-green-700 border border-green-200';
   };
 
   const getConfidenceColor = (confidence) => {
     if (confidence >= 90) return 'bg-green-500';
-    if (confidence >= 80) return 'bg-blue-500';
+    if (confidence >= 80) return 'bg-green-600';
     return 'bg-yellow-500';
   };
 
@@ -464,11 +567,11 @@ export default function VerifikasiDeteksi() {
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
                             <div 
-                              className={`h-2 rounded-full ${getConfidenceColor(item.confidence)}`}
-                              style={{ width: `${item.confidence}%` }}
+                              className={`h-2 rounded-full ${getConfidenceColor(item.confidenceScore)}`}
+                              style={{ width: `${item.confidenceScore}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm font-semibold text-gray-700">{item.confidence}%</span>
+                          <span className="text-sm font-semibold text-gray-700">{item.confidenceScore}%</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">

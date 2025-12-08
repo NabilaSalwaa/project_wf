@@ -283,7 +283,7 @@ export default function Dashboard(){
             </Link>
 
             {/* Tarik Saldo */}
-            <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
+            <Link to="/tarik-saldo" className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
                 <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -292,7 +292,7 @@ export default function Dashboard(){
               </div>
               <h4 className="font-semibold text-gray-800 mb-1">Tarik Saldo</h4>
               <p className="text-xs text-gray-500">Cairkan saldo ke rekening</p>
-            </div>
+            </Link>
 
             {/* Riwayat Transaksi */}
             <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition cursor-pointer">

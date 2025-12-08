@@ -51,17 +51,73 @@ export default function DetailDeteksi() {
   };
 
   const handleSetuju = () => {
-    alert('Setoran disetujui!');
-    navigate('/admin/data-sampah');
+    // Simpan data ke localStorage untuk verifikasi
+    const verifikasiData = {
+      id: `VER${deteksiData.id.replace('TREK', '')}`,
+      idDeteksi: deteksiData.id,
+      nama: deteksiData.nasabah.nama,
+      idNasabah: deteksiData.nasabah.idNasabah,
+      foto: passedData?.foto || 'https://ui-avatars.com/api/?name=User&background=22C55E&color=fff',
+      fotoSampah: deteksiData.deteksi.foto,
+      prediksiAI: passedData?.jenis || 'Anorganik',
+      akurasi: deteksiData.deteksi.akurasi,
+      confidenceScore: parseFloat(deteksiData.deteksi.akurasi) || 95,
+      status: 'pending',
+      tanggal: deteksiData.nasabah.tanggal,
+      waktu: deteksiData.nasabah.waktu,
+      detailSampah: deteksiData.sampah,
+      totalPembayaran: deteksiData.totalPembayaran,
+      created_at: new Date().toISOString()
+    };
+    
+    // Ambil data verifikasi yang ada
+    const existingData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+    
+    // Cek apakah data sudah ada (berdasarkan idDeteksi)
+    const isExist = existingData.some(item => item.idDeteksi === deteksiData.id);
+    
+    if (!isExist) {
+      // Tambahkan data baru
+      existingData.push(verifikasiData);
+      localStorage.setItem('verifikasiList', JSON.stringify(existingData));
+      console.log('✅ Data berhasil ditambahkan ke verifikasi:', verifikasiData);
+    }
+    
+    // Redirect ke halaman verifikasi
+    navigate('/admin/verifikasi');
   };
 
   const handleTolak = () => {
-    if (!catatan.trim()) {
-      alert('Mohon isi catatan penolakan');
-      return;
+    // Sama seperti handleSetuju, simpan dulu ke verifikasi
+    const verifikasiData = {
+      id: `VER${deteksiData.id.replace('TREK', '')}`,
+      idDeteksi: deteksiData.id,
+      nama: deteksiData.nasabah.nama,
+      idNasabah: deteksiData.nasabah.idNasabah,
+      foto: passedData?.foto || 'https://ui-avatars.com/api/?name=User&background=22C55E&color=fff',
+      fotoSampah: deteksiData.deteksi.foto,
+      prediksiAI: passedData?.jenis || 'Anorganik',
+      akurasi: deteksiData.deteksi.akurasi,
+      confidenceScore: parseFloat(deteksiData.deteksi.akurasi) || 95,
+      status: 'pending',
+      tanggal: deteksiData.nasabah.tanggal,
+      waktu: deteksiData.nasabah.waktu,
+      detailSampah: deteksiData.sampah,
+      totalPembayaran: deteksiData.totalPembayaran,
+      created_at: new Date().toISOString()
+    };
+    
+    const existingData = JSON.parse(localStorage.getItem('verifikasiList') || '[]');
+    const isExist = existingData.some(item => item.idDeteksi === deteksiData.id);
+    
+    if (!isExist) {
+      existingData.push(verifikasiData);
+      localStorage.setItem('verifikasiList', JSON.stringify(existingData));
+      console.log('✅ Data berhasil ditambahkan ke verifikasi:', verifikasiData);
     }
-    alert('Setoran ditolak dengan catatan: ' + catatan);
-    navigate('/admin/data-sampah');
+    
+    // Redirect ke halaman verifikasi
+    navigate('/admin/verifikasi');
   };
 
   const handleEditData = () => {
@@ -167,16 +223,54 @@ export default function DetailDeteksi() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-8 py-8">
         {/* Title & Status */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Hasil Deteksi</h1>
-            <p className="text-sm text-gray-500 mt-1">Detail sampah untuk verifikasi</p>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Hasil Deteksi</h1>
+              <p className="text-sm text-gray-500 mt-1">Detail sampah untuk verifikasi</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="px-4 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
+                {deteksiData.status}
+              </span>
+              <span className="text-sm text-gray-500">ID: {deteksiData.id}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="px-4 py-2 bg-yellow-50 text-yellow-700 text-sm font-semibold rounded-lg border border-yellow-200">
-              {deteksiData.status}
-            </span>
-            <span className="text-sm text-gray-500">ID: {deteksiData.id}</span>
+          
+          {/* Kategori Sampah - Prominent Display */}
+          <div className={`p-6 rounded-xl border-2 ${
+            passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic')
+              ? 'bg-green-50 border-green-300'
+              : 'bg-green-50 border-green-300'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl ${
+                  passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic')
+                    ? 'bg-green-200'
+                    : 'bg-green-200'
+                }`}>
+                  {passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic') ? '🌿' : '♻️'}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Kategori Sampah</p>
+                  <h2 className={`text-3xl font-bold ${
+                    passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic')
+                      ? 'text-green-700'
+                      : 'text-green-700'
+                  }`}>
+                    Sampah {passedData ? passedData.jenis : 'Anorganik'}
+                  </h2>
+                </div>
+              </div>
+              <div className={`px-6 py-3 rounded-lg font-bold text-lg ${
+                passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic')
+                  ? 'bg-green-600 text-white'
+                  : 'bg-green-600 text-white'
+              }`}>
+                {passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic') ? 'ORGANIK' : 'ANORGANIK'}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -195,12 +289,33 @@ export default function DetailDeteksi() {
               </div>
 
               {/* Detection Image */}
-              <div className="rounded-xl overflow-hidden mb-6">
+              <div className="rounded-xl overflow-hidden mb-6 relative bg-gray-900">
                 <img 
                   src={deteksiData.deteksi.foto} 
                   alt="Hasil Deteksi" 
-                  className="w-full h-80 object-cover"
+                  className="w-full h-auto object-contain max-h-[500px]"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'https://via.placeholder.com/800x500?text=Foto+Tidak+Tersedia';
+                  }}
                 />
+                {/* Label Organik/Anorganik */}
+                <div className="absolute top-4 right-4">
+                  <span className={`px-4 py-2 rounded-lg font-bold text-sm shadow-lg ${
+                    passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic')
+                      ? 'bg-green-500 text-white'
+                      : 'bg-green-500 text-white'
+                  }`}>
+                    {passedData ? passedData.jenis : 'Anorganik'}
+                  </span>
+                </div>
+                {/* Button Zoom */}
+                <button
+                  onClick={() => window.open(deteksiData.deteksi.foto, '_blank')}
+                  className="absolute bottom-4 right-4 bg-white/90 hover:bg-white text-gray-800 px-4 py-2 rounded-lg font-medium text-sm shadow-lg transition-all"
+                >
+                  🔍 Zoom Gambar
+                </button>
               </div>
 
               {/* Detection Stats */}
@@ -270,6 +385,19 @@ export default function DetailDeteksi() {
                 </div>
                 <h3 className="text-base font-bold text-gray-900">Detail Sampah</h3>
               </div>
+              
+              {/* Kategori Sampah Badge */}
+              <div className="mb-4">
+                <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold ${
+                  passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic')
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : 'bg-green-100 text-green-700 border border-green-300'
+                }`}>
+                  {passedData && (passedData.jenis.toLowerCase() === 'organik' || passedData.jenis.toLowerCase() === 'organic') ? '🌿' : '♻️'} 
+                  {' '}Sampah {passedData ? passedData.jenis : 'Anorganik'}
+                </span>
+              </div>
+              
               <div className="space-y-3">
                 {deteksiData.sampah.map((item, index) => (
                   <div key={index} className="pb-3 border-b border-gray-100 last:border-0 last:pb-0">
@@ -296,38 +424,17 @@ export default function DetailDeteksi() {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              {/* Textarea untuk catatan (tampil saat akan menolak) */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Catatan Penolakan (Opsional)
-                </label>
-                <textarea
-                  value={catatan}
-                  onChange={(e) => setCatatan(e.target.value)}
-                  placeholder="Tulis alasan penolakan jika diperlukan..."
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none resize-none"
-                />
-              </div>
-
+              {/* Button ke Halaman Verifikasi */}
               <button 
-                onClick={handleSetuju}
-                className="w-full px-4 py-3 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                onClick={() => {
+                  handleSetuju(); // Simpan data ke verifikasiList dulu
+                }}
+                className="w-full px-4 py-3 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Setujui Setoran
-              </button>
-
-              <button 
-                onClick={handleTolak}
-                className="w-full px-4 py-3 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Tolak Setoran
+                Lanjut ke Halaman Verifikasi
               </button>
 
               <button 
@@ -341,16 +448,16 @@ export default function DetailDeteksi() {
               </button>
             </div>
 
-            {/* Catatan Verifikasi */}
+            {/* Info Box */}
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-start gap-2">
                 <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
-                <div className="flex-1">
+                <div className="flex-1 text-left">
                   <h4 className="text-sm font-semibold text-blue-900 mb-1">Catatan Verifikasi</h4>
                   <p className="text-xs text-blue-700 leading-relaxed">
-                    Setelah otomatis sekor dapat terkirim atau berhasil anomali dari transaksi akan tersedia dalam sistem.
+                    Klik tombol di atas untuk melanjutkan ke halaman verifikasi. Di halaman verifikasi, Anda dapat menyetujui atau menolak setoran ini.
                   </p>
                 </div>
               </div>

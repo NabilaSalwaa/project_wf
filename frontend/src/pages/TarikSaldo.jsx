@@ -32,10 +32,10 @@ export default function TarikSaldo() {
   useEffect(() => {
     fetchUserData();
     
-    // Auto-refresh saldo setiap 3 detik (sama seperti Dashboard)
+    // Auto-refresh saldo setiap 10 detik
     const intervalId = setInterval(() => {
       fetchUserData();
-    }, 3000);
+    }, 10000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -223,6 +223,29 @@ export default function TarikSaldo() {
       console.log('✅ Response dari server:', response.data);
 
       if (response.data.success) {
+        // Create penarikan record for transaksi page
+        const penarikanForTransaksi = {
+          id: `WD${Date.now()}`,
+          nama: currentUser.name,
+          email: currentUser.email,
+          idNasabah: currentUser.idNasabah || `NSB${currentUser.id}`,
+          foto: currentUser.foto || profilePhoto || `https://ui-avatars.com/api/?name=${currentUser.name}&background=EF4444&color=fff`,
+          jumlah: jumlah,
+          bank: penarikanData.bank,
+          noRekening: penarikanData.rekening,
+          namaRekening: penarikanData.atasNama,
+          catatan: '-',
+          metode: 'Transfer Bank',
+          status: 'Selesai',
+          tanggal: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        
+        // Save to penarikanList localStorage for transaksi page
+        const existingPenarikan = JSON.parse(localStorage.getItem('penarikanList') || '[]');
+        existingPenarikan.unshift(penarikanForTransaksi);
+        localStorage.setItem('penarikanList', JSON.stringify(existingPenarikan));
+        
         // Simpan ke localStorage untuk fallback
         localStorage.setItem('latestPenarikanActivity', JSON.stringify(penarikanData));
         const existingTransaksi = JSON.parse(localStorage.getItem('riwayatTransaksi') || '[]');
@@ -238,6 +261,7 @@ export default function TarikSaldo() {
           saldoBaru: newSaldo,
           selisih: jumlah
         });
+        console.log('✅ Data penarikan disimpan ke penarikanList:', penarikanForTransaksi);
         
         // Redirect
         setTimeout(() => {
